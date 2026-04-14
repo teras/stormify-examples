@@ -1,0 +1,21 @@
+build/
+target/
+.gradle/
+.kotlin/
+.idea/
+*.hprof
+local.properties
+
+# Runtime DB files
+data/
+# ...except the pre-populated demo database for kotlin-rest.
+!kotlin-rest/data/
+!kotlin-rest/data/warehouse.db
+
+# Frontend (node/vite/TS)
+node_modules/
+dist/
+*.tsbuildinfo
+vite.config.d.ts
+vite.config.js
+.env
