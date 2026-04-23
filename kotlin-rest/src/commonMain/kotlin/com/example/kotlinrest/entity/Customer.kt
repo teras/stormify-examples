@@ -1,16 +1,12 @@
 package com.example.kotlinrest.entity
 
-import onl.ycode.stormify.AutoTable
-import onl.ycode.stormify.CRUDTable
-import onl.ycode.stormify.DbField
-import onl.ycode.stormify.DbTable
-import onl.ycode.stormify.db
+import onl.ycode.stormify.*
 
 @DbTable
 class Customer(
     @DbField(primaryKey = true, autoIncrement = true)
     var id: Int? = null,
-) : AutoTable(), CRUDTable {
+) : AutoTable() {
     var name: String by db("")
     var email: String by db("")
     var phone: String by db("")

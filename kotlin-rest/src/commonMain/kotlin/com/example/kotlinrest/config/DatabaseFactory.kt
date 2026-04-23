@@ -5,10 +5,8 @@ import onl.ycode.kdbc.DataSource
 import onl.ycode.kdbc.KdbcDataSource
 import onl.ycode.kdbc.Statement
 import onl.ycode.logger.LogLevel
-import onl.ycode.stormify.EntityRegistrar
-import onl.ycode.stormify.Stormify
-
-internal expect val generatedEntities: EntityRegistrar
+import onl.ycode.stormify.*
+import onl.ycode.stormify.generated.stormifyEntities
 
 class DatabaseFactory(
     private val settings: DatabaseSettings,
@@ -22,7 +20,7 @@ class DatabaseFactory(
                 return conn
             }
         }
-        return Stormify(dataSource, generatedEntities).apply {
+        return Stormify(dataSource, stormifyEntities).apply {
             logger.level = LogLevel.DEBUG
         }.asDefault()
     }

@@ -16,13 +16,10 @@ import com.example.kotlinrest.service.support.PagedQuerySupport
 import com.example.kotlinrest.service.support.addEnumFacet
 import com.example.kotlinrest.service.support.CsvSupport
 import com.example.kotlinrest.support.DocumentNumberGenerator
-import onl.ycode.stormify.TransactionContext
 import onl.ycode.stormify.biglist.PageSpec
 import onl.ycode.stormify.biglist.PagedQuery
 import onl.ycode.stormify.biglist.Facet
-import onl.ycode.stormify.details
-import onl.ycode.stormify.findById
-import onl.ycode.stormify.transaction
+import onl.ycode.stormify.*
 
 class PurchaseOrderService {
     private val query = PagedQuery<PurchaseOrder>().apply {
@@ -67,33 +64,29 @@ class PurchaseOrderService {
         return transaction {
             validateItems(request.items.size)
             val supplier = findById<Supplier>(request.supplierId) ?: throw EntityNotFoundException("Supplier", request.supplierId)
-            val warehouse = ServiceSupport.loadWarehouse(this, request.warehouseId)
-            val order = create(
-                PurchaseOrder().apply {
-                    orderNumber = DocumentNumberGenerator.nextPurchaseOrderNumber()
-                    this.supplier = supplier
-                    this.warehouse = warehouse
-                    status = PurchaseOrderStatus.DRAFT
-                    orderedAt = ServiceSupport.now(this@transaction)
-                    expectedAt = request.expectedAt.trim()
-                    receivedAt = ""
-                    notes = request.notes.trim()
-                }
-            )
+            val warehouse = ServiceSupport.loadWarehouse(request.warehouseId)
+            val order = PurchaseOrder().apply {
+                orderNumber = DocumentNumberGenerator.nextPurchaseOrderNumber()
+                this.supplier = supplier
+                this.warehouse = warehouse
+                status = PurchaseOrderStatus.DRAFT
+                orderedAt = ServiceSupport.now()
+                expectedAt = request.expectedAt.trim()
+                receivedAt = ""
+                notes = request.notes.trim()
+            }.create()
             request.items.forEach { input ->
                 ServiceSupport.validatePositive(input.quantity, "Purchase order item quantity")
                 ServiceSupport.validateNonNegative(input.unitCost, "Purchase order item unit cost")
-                create(
-                    PurchaseOrderItem().apply {
-                        purchaseOrder = order
-                        product = ServiceSupport.loadProduct(this@transaction, input.productId)
-                        quantity = input.quantity
-                        unitCost = input.unitCost
-                        lineTotal = input.quantity * input.unitCost
-                    }
-                )
+                PurchaseOrderItem().apply {
+                    purchaseOrder = order
+                    product = ServiceSupport.loadProduct(input.productId)
+                    quantity = input.quantity
+                    unitCost = input.unitCost
+                    lineTotal = input.quantity * input.unitCost
+                }.create()
             }
-            toDetailsResponse(this, order)
+            order.toDetailsResponse()
         }
     }
 
@@ -105,26 +98,24 @@ class PurchaseOrderService {
                 throw ValidationException("Only draft purchase orders can be updated")
             }
             order.supplier = findById<Supplier>(request.supplierId) ?: throw EntityNotFoundException("Supplier", request.supplierId)
-            order.warehouse = ServiceSupport.loadWarehouse(this, request.warehouseId)
+            order.warehouse = ServiceSupport.loadWarehouse(request.warehouseId)
             order.expectedAt = request.expectedAt.trim()
             order.notes = request.notes.trim()
-            update(order)
+            order.update()
 
-            getDetails<PurchaseOrderItem>(order).forEach { delete(it) }
+            order.details<PurchaseOrderItem>().forEach { it.delete() }
             request.items.forEach { input ->
                 ServiceSupport.validatePositive(input.quantity, "Purchase order item quantity")
                 ServiceSupport.validateNonNegative(input.unitCost, "Purchase order item unit cost")
-                create(
-                    PurchaseOrderItem().apply {
-                        purchaseOrder = order
-                        product = ServiceSupport.loadProduct(this@transaction, input.productId)
-                        quantity = input.quantity
-                        unitCost = input.unitCost
-                        lineTotal = input.quantity * input.unitCost
-                    }
-                )
+                PurchaseOrderItem().apply {
+                    purchaseOrder = order
+                    product = ServiceSupport.loadProduct(input.productId)
+                    quantity = input.quantity
+                    unitCost = input.unitCost
+                    lineTotal = input.quantity * input.unitCost
+                }.create()
             }
-            toDetailsResponse(this, order)
+            order.toDetailsResponse()
         }
     }
 
@@ -135,21 +126,24 @@ class PurchaseOrderService {
                 throw ValidationException("Purchase order is already received")
             }
             val warehouse = order.warehouse ?: throw ValidationException("Purchase order warehouse is required")
-            getDetails<PurchaseOrderItem>(order).forEach { item ->
+            order.details<PurchaseOrderItem>().forEach { item ->
                 val product = item.product ?: throw ValidationException("Purchase order item product is required")
-                val stock = ServiceSupport.loadOrCreateStockItem(this, warehouse, product)
+                val stock = ServiceSupport.loadOrCreateStockItem(warehouse, product)
                 stock.quantityOnHand += item.quantity
-                stock.lastUpdatedAt = ServiceSupport.now(this)
-                update(stock)
+                stock.lastUpdatedAt = ServiceSupport.now()
+                stock.update()
             }
             order.status = PurchaseOrderStatus.RECEIVED
-            order.receivedAt = ServiceSupport.now(this)
-            update(order)
-            toDetailsResponse(this, order)
+            order.receivedAt = ServiceSupport.now()
+            order.update()
+            order.toDetailsResponse()
         }
     }
 
     private fun load(id: Int): PurchaseOrder =
+        findById<PurchaseOrder>(id) ?: throw EntityNotFoundException("PurchaseOrder", id)
+
+    private fun loadTx(id: Int): PurchaseOrder =
         findById<PurchaseOrder>(id) ?: throw EntityNotFoundException("PurchaseOrder", id)
 
     private fun validateItems(count: Int) {
@@ -185,36 +179,6 @@ class PurchaseOrderService {
             expectedAt = expectedAt,
             receivedAt = receivedAt,
             notes = notes,
-            totalAmount = items.sumOf { it.lineTotal },
-            items = items.map {
-                PurchaseOrderItemResponse(
-                    id = it.id ?: 0,
-                    productId = it.product?.id,
-                    productSku = it.product?.sku,
-                    productName = it.product?.name,
-                    quantity = it.quantity,
-                    unitCost = it.unitCost,
-                    lineTotal = it.lineTotal,
-                )
-            },
-        )
-    }
-
-    private fun TransactionContext.loadTx(id: Int): PurchaseOrder =
-        findById<PurchaseOrder>(id) ?: throw EntityNotFoundException("PurchaseOrder", id)
-
-    private fun toDetailsResponse(tx: TransactionContext, order: PurchaseOrder): PurchaseOrderDetailsResponse {
-        val items = tx.getDetails<PurchaseOrderItem>(order)
-        return PurchaseOrderDetailsResponse(
-            id = order.id ?: 0,
-            orderNumber = order.orderNumber,
-            supplier = ServiceSupport.ref(order.supplier?.id, order.supplier?.name),
-            warehouse = ServiceSupport.ref(order.warehouse?.id, order.warehouse?.name),
-            status = order.status,
-            orderedAt = order.orderedAt,
-            expectedAt = order.expectedAt,
-            receivedAt = order.receivedAt,
-            notes = order.notes,
             totalAmount = items.sumOf { it.lineTotal },
             items = items.map {
                 PurchaseOrderItemResponse(

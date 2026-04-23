@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import onl.ycode.stormify.Stormify
+import onl.ycode.stormify.*
 
 /**
  * Single-screen ViewModel that hands the UI a list of [Task]s plus the
@@ -41,8 +41,8 @@ class TasksViewModel(app: Application) : AndroidViewModel(app) {
             // first time it's read. Touching `task.user` here forces the load
             // before we hand the data to Compose, so the UI never blocks the
             // main thread on a follow-up SELECT.
-            val loadedTasks = stormify.findAll<Task>().onEach { it.user?.let { u -> stormify.populate(u) } }
-            val loadedUsers = stormify.findAll<User>()
+            val loadedTasks = findAll<Task>().onEach { it.user?.let { u -> stormify.populate(u) } }
+            val loadedUsers = findAll<User>()
             loadedTasks to loadedUsers
         }
         _state.value = TasksUiState(tasks = tasks, users = users)
@@ -51,13 +51,13 @@ class TasksViewModel(app: Application) : AndroidViewModel(app) {
     fun toggleCompleted(task: Task) = viewModelScope.launch {
         withContext(Dispatchers.IO) {
             task.isCompleted = !task.isCompleted
-            stormify.update(task)
+            task.update()
         }
         refresh()
     }
 
     fun deleteTask(task: Task) = viewModelScope.launch {
-        withContext(Dispatchers.IO) { stormify.delete(task) }
+        withContext(Dispatchers.IO) { task.delete() }
         refresh()
     }
 
@@ -65,12 +65,12 @@ class TasksViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 stormify.transaction {
-                    create(Task().apply {
+                    Task().apply {
                         this.title = title
                         this.description = description
                         this.priority = priority
                         this.user = owner
-                    })
+                    }.create()
                 }
             }
             refresh()

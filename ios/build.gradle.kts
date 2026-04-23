@@ -1,4 +1,4 @@
 plugins {
-    kotlin("multiplatform") version "2.2.20" apply false
-    id("com.google.devtools.ksp") version "2.2.20-2.0.2" apply false
+    kotlin("multiplatform") version "2.2.21" apply false
+    id("onl.ycode.stormify") version "2.5.0" apply false
 }

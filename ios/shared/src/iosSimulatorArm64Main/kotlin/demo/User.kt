@@ -1,7 +1,6 @@
 package demo
 
-import onl.ycode.stormify.DbField
-import onl.ycode.stormify.DbTable
+import onl.ycode.stormify.*
 
 /**
  * User entity — a plain class without AutoTable.

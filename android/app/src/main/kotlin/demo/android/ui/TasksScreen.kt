@@ -18,18 +18,16 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -59,28 +57,33 @@ import demo.android.db.User
  * The screen is intentionally tiny: ~150 lines of Compose so the demo's
  * "Stormify story" stays in focus instead of getting buried under UI plumbing.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TasksScreen(viewModel: TasksViewModel = viewModel()) {
     val state by viewModel.state.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
 
     Scaffold(
-        topBar = {
-            TopAppBar(title = { Text("Stormify Tasks") })
-        },
         floatingActionButton = {
             FloatingActionButton(onClick = { showAddDialog = true }) {
                 Icon(Icons.Default.Add, contentDescription = "Add task")
             }
         }
     ) { padding ->
-        TaskList(
-            tasks = state.tasks,
-            onToggle = viewModel::toggleCompleted,
-            onDelete = viewModel::deleteTask,
-            contentPadding = padding,
-        )
+        Column(modifier = Modifier.padding(padding)) {
+            Surface(color = MaterialTheme.colorScheme.primaryContainer, modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    "Stormify Tasks",
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(16.dp),
+                )
+            }
+            TaskList(
+                tasks = state.tasks,
+                onToggle = viewModel::toggleCompleted,
+                onDelete = viewModel::deleteTask,
+                contentPadding = PaddingValues(0.dp),
+            )
+        }
     }
 
     if (showAddDialog) {
@@ -179,7 +182,6 @@ private fun PriorityChip(priority: Priority) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AddTaskDialog(
     users: List<User>,
@@ -226,18 +228,11 @@ private fun AddTaskDialog(
                     label = { Text("Description") },
                     modifier = Modifier.fillMaxWidth(),
                 )
-                ExposedDropdownMenuBox(
-                    expanded = priorityExpanded,
-                    onExpandedChange = { priorityExpanded = !priorityExpanded },
-                ) {
-                    OutlinedTextField(
-                        value = priority.name,
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Priority") },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = priorityExpanded) },
-                        modifier = Modifier.menuAnchor().fillMaxWidth(),
-                    )
+                Box {
+                    OutlinedButton(
+                        onClick = { priorityExpanded = true },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) { Text("Priority: ${priority.name}") }
                     DropdownMenu(
                         expanded = priorityExpanded,
                         onDismissRequest = { priorityExpanded = false },
@@ -250,18 +245,11 @@ private fun AddTaskDialog(
                         }
                     }
                 }
-                ExposedDropdownMenuBox(
-                    expanded = ownerExpanded,
-                    onExpandedChange = { ownerExpanded = !ownerExpanded },
-                ) {
-                    OutlinedTextField(
-                        value = owner.name ?: "",
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Owner") },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = ownerExpanded) },
-                        modifier = Modifier.menuAnchor().fillMaxWidth(),
-                    )
+                Box {
+                    OutlinedButton(
+                        onClick = { ownerExpanded = true },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) { Text("Owner: ${owner.name ?: "(no name)"}") }
                     DropdownMenu(
                         expanded = ownerExpanded,
                         onDismissRequest = { ownerExpanded = false },

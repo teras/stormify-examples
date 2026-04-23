@@ -1,10 +1,6 @@
 package demo.android.db
 
-import onl.ycode.stormify.AutoTable
-import onl.ycode.stormify.DbField
-import onl.ycode.stormify.DbTable
-import onl.ycode.stormify.DbValue
-import onl.ycode.stormify.db
+import onl.ycode.stormify.*
 
 /**
  * Entities for the Stormify Android demo.

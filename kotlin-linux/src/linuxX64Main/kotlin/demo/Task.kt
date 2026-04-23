@@ -1,9 +1,6 @@
 package demo
 
-import onl.ycode.stormify.AutoTable
-import onl.ycode.stormify.DbTable
-import onl.ycode.stormify.DbField
-import onl.ycode.stormify.db
+import onl.ycode.stormify.*
 
 /**
  * Task entity using Stormify annotations and AutoTable for lazy-loaded references.
