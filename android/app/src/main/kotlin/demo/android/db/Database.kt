@@ -2,7 +2,7 @@ package demo.android.db
 
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
-import onl.ycode.stormify.Stormify
+import onl.ycode.stormify.*
 
 /**
  * Single owner of the Stormify instance for the demo app.
@@ -43,7 +43,7 @@ object Database {
         // Stormify(SQLiteDatabase) is the Android-specific convenience function
         // declared in stormify-android. It wraps the SQLiteDatabase in an
         // AndroidDataSource (KDBC) and returns a ready-to-use Stormify.
-        val stormify = Stormify(db)
+        val stormify = Stormify(db).asDefault()
 
         bootstrapSchema(stormify)
         seedIfEmpty(stormify)
@@ -81,27 +81,27 @@ object Database {
         if (userCount > 0) return
 
         stormify.transaction {
-            val alice = create(User(name = "Alice", email = "alice@example.com"))
-            val bob = create(User(name = "Bob", email = "bob@example.com"))
+            val alice = User(name = "Alice", email = "alice@example.com").create()
+            val bob = User(name = "Bob", email = "bob@example.com").create()
 
-            create(Task().apply {
+            Task().apply {
                 title = "Wire up Stormify"
                 description = "Drop the library into the app and run it."
                 priority = Priority.HIGH
                 user = alice
-            })
-            create(Task().apply {
+            }.create()
+            Task().apply {
                 title = "Show off lazy refs"
                 description = "Tap a row — the user is loaded on demand."
                 priority = Priority.MEDIUM
                 user = alice
-            })
-            create(Task().apply {
+            }.create()
+            Task().apply {
                 title = "Review the example"
                 description = "Skim the code; it should read top-to-bottom."
                 priority = Priority.LOW
                 user = bob
-            })
+            }.create()
         }
     }
 }

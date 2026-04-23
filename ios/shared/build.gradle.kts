@@ -1,14 +1,10 @@
 plugins {
     kotlin("multiplatform")
-    id("com.google.devtools.ksp")
+    id("onl.ycode.stormify")
 }
 
-val stormifyVersion: String = providers.gradleProperty("stormifyVersion").getOrElse("2.1.1")
-
 repositories {
-    mavenLocal()
     mavenCentral()
-    maven("https://central.sonatype.com/repository/maven-snapshots/")
 }
 
 kotlin {
@@ -22,29 +18,10 @@ kotlin {
         }
     }
 
-    jvmToolchain(11)
-
     sourceSets {
-        commonMain.dependencies {
-            implementation("onl.ycode:stormify:$stormifyVersion")
-        }
-        // iosArm64 reuses iosSimulatorArm64 sources and KSP output
+        // iosArm64 reuses iosSimulatorArm64 sources
         val iosArm64Main by getting {
-            kotlin.srcDir("build/generated/ksp/iosSimulatorArm64/iosSimulatorArm64Main/kotlin")
+            kotlin.srcDir("src/iosSimulatorArm64Main/kotlin")
         }
-    }
-}
-
-dependencies {
-    add("kspIosSimulatorArm64", "onl.ycode:annproc:$stormifyVersion")
-}
-
-tasks.matching { it.name == "compileKotlinIosArm64" }.configureEach {
-    dependsOn("kspKotlinIosSimulatorArm64")
-}
-
-tasks.named("clean") {
-    doLast {
-        delete("build/kspCaches")
     }
 }

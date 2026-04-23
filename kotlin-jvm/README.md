@@ -7,7 +7,7 @@ A self-contained Kotlin JVM application demonstrating Stormify ORM with an SQLit
 The examples live in a single GitHub repo. Clone it and step into this folder:
 
 ```bash
-git clone -b 2.1.1 https://github.com/teras/stormify-examples.git
+git clone -b 2.5.0 https://github.com/teras/stormify-examples.git
 cd stormify-examples/kotlin-jvm
 ```
 
@@ -22,7 +22,7 @@ Compared to the Java example, notice how Kotlin's `by db()` delegates replace ma
 - **Schema setup** with raw SQL (`executeUpdate`)
 - **CRUD operations** — create, findById, findAll, update, delete
 - **Entity references** with lazy loading (`AutoTable` + `by db()`)
-- **Transaction DSL** with `stormify.transaction { ... }` (lambda-with-receiver)
+- **Transaction DSL** with `stormify.transaction { ... }`
 - **Automatic rollback** on exception
 - **Raw SQL JOIN query** returning `Map<String, Any?>` results
 

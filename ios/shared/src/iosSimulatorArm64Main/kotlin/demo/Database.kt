@@ -2,7 +2,7 @@ package demo
 
 import onl.ycode.stormify.generated.GeneratedEntities
 import onl.ycode.kdbc.KdbcDataSource
-import onl.ycode.stormify.Stormify
+import onl.ycode.stormify.*
 import platform.Foundation.NSSearchPathForDirectoriesInDomains
 import platform.Foundation.NSDocumentDirectory
 import platform.Foundation.NSUserDomainMask
@@ -30,7 +30,7 @@ object Database {
         val dbPath = "$docs/stormify-demo.db"
 
         val ds = KdbcDataSource("jdbc:sqlite:$dbPath")
-        val stormify = Stormify(ds, GeneratedEntities)
+        val stormify = Stormify(ds, GeneratedEntities).asDefault()
 
         bootstrapSchema(stormify)
         seedIfEmpty(stormify)
@@ -66,27 +66,27 @@ object Database {
         if (userCount > 0) return
 
         stormify.transaction {
-            val alice = create(User(name = "Alice", email = "alice@example.com"))
-            val bob = create(User(name = "Bob", email = "bob@example.com"))
+            val alice = User(name = "Alice", email = "alice@example.com").create()
+            val bob = User(name = "Bob", email = "bob@example.com").create()
 
-            create(Task().apply {
+            Task().apply {
                 title = "Wire up Stormify"
                 description = "Drop the library into the app and run it."
                 priority = Priority.HIGH
                 user = alice
-            })
-            create(Task().apply {
+            }.create()
+            Task().apply {
                 title = "Show off lazy refs"
                 description = "Tap a row \u2014 the user is loaded on demand."
                 priority = Priority.MEDIUM
                 user = alice
-            })
-            create(Task().apply {
+            }.create()
+            Task().apply {
                 title = "Review the example"
                 description = "Skim the code; it should read top-to-bottom."
                 priority = Priority.LOW
                 user = bob
-            })
+            }.create()
         }
     }
 }
@@ -95,27 +95,32 @@ object Database {
 
 fun getAllTasks(): List<Task> {
     val s = Database.open()
-    return s.findAll<Task>().onEach { it.user?.let { u -> s.populate(u) } }
+    return findAll<Task>().onEach { it.user?.let { u -> s.populate(u) } }
 }
 
-fun getAllUsers(): List<User> = Database.open().findAll()
+fun getAllUsers(): List<User> {
+    Database.open()
+    return findAll()
+}
 
 fun addTask(title: String, description: String, priority: Priority, owner: User) {
     Database.open().transaction {
-        create(Task().apply {
+        Task().apply {
             this.title = title
             this.description = description
             this.priority = priority
             this.user = owner
-        })
+        }.create()
     }
 }
 
 fun toggleCompleted(task: Task) {
     task.isCompleted = !task.isCompleted
-    Database.open().update(task)
+    Database.open()
+    task.update()
 }
 
 fun deleteTask(task: Task) {
-    Database.open().delete(task)
+    Database.open()
+    task.delete()
 }

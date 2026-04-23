@@ -7,7 +7,7 @@ React + TypeScript admin client for the Stormify REST demo. It is the **visible 
 The examples live in a single GitHub repo. Clone it and step into this folder:
 
 ```bash
-git clone -b 2.1.1 https://github.com/teras/stormify-examples.git
+git clone -b 2.5.0 https://github.com/teras/stormify-examples.git
 cd stormify-examples/frontend-react
 ```
 

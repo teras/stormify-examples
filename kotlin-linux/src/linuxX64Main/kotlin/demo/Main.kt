@@ -2,7 +2,7 @@ package demo
 
 import onl.ycode.stormify.generated.GeneratedEntities
 import onl.ycode.kdbc.KdbcDataSource
-import onl.ycode.stormify.Stormify
+import onl.ycode.stormify.*
 import platform.posix.remove
 
 fun main() {
@@ -36,32 +36,32 @@ fun main() {
     // === Create (ORM) ===
     println("=== Creating Users ===")
     stormify.transaction {
-        val alice = create(User(name = "Alice", email = "alice@example.com"))
+        val alice = User(name = "Alice", email = "alice@example.com").create()
         println("Created: $alice")
 
-        val bob = create(User(name = "Bob", email = "bob@example.com"))
+        val bob = User(name = "Bob", email = "bob@example.com").create()
         println("Created: $bob")
 
         println("\n=== Creating Tasks ===")
         val t1 = Task().apply { title = "Set up database"; description = "Configure schema and indexes"; priority = Priority.HIGH; user = alice }
-        create(t1)
+        t1.create()
         println("Created: $t1")
 
         val t2 = Task().apply { title = "Write documentation"; description = "API reference and examples"; priority = Priority.MEDIUM; user = alice }
-        create(t2)
+        t2.create()
         println("Created: $t2")
 
         val t3 = Task().apply { title = "Review pull request"; description = "Check code style and tests"; priority = Priority.LOW; user = bob }
-        create(t3)
+        t3.create()
         println("Created: $t3")
     }
 
     // === Read (ORM) ===
     println("\n=== Find by ID ===")
-    val foundUser = stormify.findById<User>(1)
+    val foundUser = findById<User>(1)
     println("Found user: $foundUser")
 
-    val foundTask = stormify.findById<Task>(2)
+    val foundTask = findById<Task>(2)
     println("Found task: $foundTask")
 
     // === Reference loading demo ===
@@ -75,38 +75,38 @@ fun main() {
     println("After populate:  $userRef")     // User(id=1, name=Alice, email=alice@example.com)
 
     println("\n=== Find All ===")
-    val allTasks = stormify.findAll<Task>()
+    val allTasks = findAll<Task>()
     allTasks.forEach { println("  $it") }
 
     // === Update (ORM) ===
     println("\n=== Update Task ===")
     foundTask.isCompleted = true
-    stormify.update(foundTask)
-    val updated = stormify.findById<Task>(foundTask.id!!)
+    foundTask.update()
+    val updated = findById<Task>(foundTask.id!!)
     println("Updated: $updated")
 
     // === Delete (ORM) ===
     println("\n=== Delete Task ===")
-    val toDelete = stormify.findById<Task>(3)!!
+    val toDelete = findById<Task>(3)!!
     println("Deleting: $toDelete")
-    stormify.delete(toDelete)
-    val remaining = stormify.findAll<Task>()
+    toDelete.delete()
+    val remaining = findAll<Task>()
     println("Remaining tasks: ${remaining.size}")
 
     // === Transaction Rollback ===
     println("\n=== Transaction Rollback Demo ===")
-    val countBefore = stormify.findAll<Task>().size
+    val countBefore = findAll<Task>().size
     try {
         stormify.transaction {
             val u = findById<User>(1)
-            create(Task().apply { title = "Temporary task"; description = "..."; priority = Priority.LOW; user = u })
+            Task().apply { title = "Temporary task"; description = "..."; priority = Priority.LOW; user = u }.create()
             println("Task created inside transaction")
             throw RuntimeException("Something went wrong!")
         }
     } catch (e: RuntimeException) {
         println("Transaction failed: ${e.message}")
     }
-    val countAfter = stormify.findAll<Task>().size
+    val countAfter = findAll<Task>().size
     println("Tasks before: $countBefore, after: $countAfter (unchanged)")
 
     // === Raw SQL with JOIN (Low-Level API) ===

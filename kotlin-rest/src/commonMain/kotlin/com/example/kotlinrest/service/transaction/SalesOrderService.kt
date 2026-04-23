@@ -16,13 +16,10 @@ import com.example.kotlinrest.service.support.PagedQuerySupport
 import com.example.kotlinrest.service.support.addEnumFacet
 import com.example.kotlinrest.service.support.CsvSupport
 import com.example.kotlinrest.support.DocumentNumberGenerator
-import onl.ycode.stormify.TransactionContext
 import onl.ycode.stormify.biglist.PageSpec
 import onl.ycode.stormify.biglist.PagedQuery
 import onl.ycode.stormify.biglist.Facet
-import onl.ycode.stormify.details
-import onl.ycode.stormify.findById
-import onl.ycode.stormify.transaction
+import onl.ycode.stormify.*
 
 class SalesOrderService {
     private val query = PagedQuery<SalesOrder>().apply {
@@ -65,32 +62,28 @@ class SalesOrderService {
         return transaction {
             validateItems(request.items.size)
             val customer = findById<Customer>(request.customerId) ?: throw EntityNotFoundException("Customer", request.customerId)
-            val warehouse = ServiceSupport.loadWarehouse(this, request.warehouseId)
-            val order = create(
-                SalesOrder().apply {
-                    orderNumber = DocumentNumberGenerator.nextSalesOrderNumber()
-                    this.customer = customer
-                    this.warehouse = warehouse
-                    status = SalesOrderStatus.DRAFT
-                    orderedAt = ServiceSupport.now(this@transaction)
-                    confirmedAt = ""
-                    notes = request.notes.trim()
-                }
-            )
+            val warehouse = ServiceSupport.loadWarehouse(request.warehouseId)
+            val order = SalesOrder().apply {
+                orderNumber = DocumentNumberGenerator.nextSalesOrderNumber()
+                this.customer = customer
+                this.warehouse = warehouse
+                status = SalesOrderStatus.DRAFT
+                orderedAt = ServiceSupport.now()
+                confirmedAt = ""
+                notes = request.notes.trim()
+            }.create()
             request.items.forEach { input ->
                 ServiceSupport.validatePositive(input.quantity, "Sales order item quantity")
                 ServiceSupport.validateNonNegative(input.unitPrice, "Sales order item unit price")
-                create(
-                    SalesOrderItem().apply {
-                        salesOrder = order
-                        product = ServiceSupport.loadProduct(this@transaction, input.productId)
-                        quantity = input.quantity
-                        unitPrice = input.unitPrice
-                        lineTotal = input.quantity * input.unitPrice
-                    }
-                )
+                SalesOrderItem().apply {
+                    salesOrder = order
+                    product = ServiceSupport.loadProduct(input.productId)
+                    quantity = input.quantity
+                    unitPrice = input.unitPrice
+                    lineTotal = input.quantity * input.unitPrice
+                }.create()
             }
-            toDetailsResponse(this, order)
+            order.toDetailsResponse()
         }
     }
 
@@ -102,24 +95,22 @@ class SalesOrderService {
                 throw ValidationException("Only draft sales orders can be updated")
             }
             order.customer = findById<Customer>(request.customerId) ?: throw EntityNotFoundException("Customer", request.customerId)
-            order.warehouse = ServiceSupport.loadWarehouse(this, request.warehouseId)
+            order.warehouse = ServiceSupport.loadWarehouse(request.warehouseId)
             order.notes = request.notes.trim()
-            update(order)
-            getDetails<SalesOrderItem>(order).forEach { delete(it) }
+            order.update()
+            order.details<SalesOrderItem>().forEach { it.delete() }
             request.items.forEach { input ->
                 ServiceSupport.validatePositive(input.quantity, "Sales order item quantity")
                 ServiceSupport.validateNonNegative(input.unitPrice, "Sales order item unit price")
-                create(
-                    SalesOrderItem().apply {
-                        salesOrder = order
-                        product = ServiceSupport.loadProduct(this@transaction, input.productId)
-                        quantity = input.quantity
-                        unitPrice = input.unitPrice
-                        lineTotal = input.quantity * input.unitPrice
-                    }
-                )
+                SalesOrderItem().apply {
+                    salesOrder = order
+                    product = ServiceSupport.loadProduct(input.productId)
+                    quantity = input.quantity
+                    unitPrice = input.unitPrice
+                    lineTotal = input.quantity * input.unitPrice
+                }.create()
             }
-            toDetailsResponse(this, order)
+            order.toDetailsResponse()
         }
     }
 
@@ -130,25 +121,28 @@ class SalesOrderService {
                 throw ValidationException("Only draft sales orders can be confirmed")
             }
             val warehouse = order.warehouse ?: throw ValidationException("Sales order warehouse is required")
-            getDetails<SalesOrderItem>(order).forEach { item ->
+            order.details<SalesOrderItem>().forEach { item ->
                 val product = item.product ?: throw ValidationException("Sales order item product is required")
-                val stock = ServiceSupport.loadOrCreateStockItem(this, warehouse, product)
+                val stock = ServiceSupport.loadOrCreateStockItem(warehouse, product)
                 val available = stock.quantityOnHand - stock.quantityReserved
                 if (available < item.quantity) {
                     throw ValidationException("Insufficient available stock for product ${product.sku}")
                 }
                 stock.quantityReserved += item.quantity
-                stock.lastUpdatedAt = ServiceSupport.now(this)
-                update(stock)
+                stock.lastUpdatedAt = ServiceSupport.now()
+                stock.update()
             }
             order.status = SalesOrderStatus.CONFIRMED
-            order.confirmedAt = ServiceSupport.now(this)
-            update(order)
-            toDetailsResponse(this, order)
+            order.confirmedAt = ServiceSupport.now()
+            order.update()
+            order.toDetailsResponse()
         }
     }
 
     private fun load(id: Int): SalesOrder =
+        findById<SalesOrder>(id) ?: throw EntityNotFoundException("SalesOrder", id)
+
+    private fun loadTx(id: Int): SalesOrder =
         findById<SalesOrder>(id) ?: throw EntityNotFoundException("SalesOrder", id)
 
     private fun validateItems(count: Int) {
@@ -182,35 +176,6 @@ class SalesOrderService {
             orderedAt = orderedAt,
             confirmedAt = confirmedAt,
             notes = notes,
-            totalAmount = items.sumOf { it.lineTotal },
-            items = items.map {
-                SalesOrderItemResponse(
-                    id = it.id ?: 0,
-                    productId = it.product?.id,
-                    productSku = it.product?.sku,
-                    productName = it.product?.name,
-                    quantity = it.quantity,
-                    unitPrice = it.unitPrice,
-                    lineTotal = it.lineTotal,
-                )
-            },
-        )
-    }
-
-    private fun TransactionContext.loadTx(id: Int): SalesOrder =
-        findById<SalesOrder>(id) ?: throw EntityNotFoundException("SalesOrder", id)
-
-    private fun toDetailsResponse(tx: TransactionContext, order: SalesOrder): SalesOrderDetailsResponse {
-        val items = tx.getDetails<SalesOrderItem>(order)
-        return SalesOrderDetailsResponse(
-            id = order.id ?: 0,
-            orderNumber = order.orderNumber,
-            customer = ServiceSupport.ref(order.customer?.id, order.customer?.name),
-            warehouse = ServiceSupport.ref(order.warehouse?.id, order.warehouse?.name),
-            status = order.status,
-            orderedAt = order.orderedAt,
-            confirmedAt = order.confirmedAt,
-            notes = order.notes,
             totalAmount = items.sumOf { it.lineTotal },
             items = items.map {
                 SalesOrderItemResponse(

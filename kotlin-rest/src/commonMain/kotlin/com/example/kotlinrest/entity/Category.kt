@@ -1,10 +1,6 @@
 package com.example.kotlinrest.entity
 
-import onl.ycode.stormify.AutoTable
-import onl.ycode.stormify.CRUDTable
-import onl.ycode.stormify.DbField
-import onl.ycode.stormify.DbTable
-import onl.ycode.stormify.db
+import onl.ycode.stormify.*
 
 /**
  * Master-data entities are also modeled as AutoTable so relations can stay
@@ -14,7 +10,7 @@ import onl.ycode.stormify.db
 class Category(
     @DbField(primaryKey = true, autoIncrement = true)
     var id: Int? = null,
-) : AutoTable(), CRUDTable {
+) : AutoTable() {
     var name: String by db("")
     var description: String by db("")
     var active: Boolean by db(true)

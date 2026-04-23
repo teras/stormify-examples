@@ -18,8 +18,7 @@ import com.example.kotlinrest.service.support.CsvSupport
 import com.example.kotlinrest.support.DocumentNumberGenerator
 import onl.ycode.stormify.biglist.PageSpec
 import onl.ycode.stormify.biglist.PagedQuery
-import onl.ycode.stormify.findById
-import onl.ycode.stormify.transaction
+import onl.ycode.stormify.*
 
 class ShipmentService {
     private val query = PagedQuery<Shipment>().apply {
@@ -95,22 +94,22 @@ class ShipmentService {
             }
             val salesOrder = shipment.salesOrder ?: throw ValidationException("Shipment sales order is required")
             val warehouse = shipment.warehouse ?: throw ValidationException("Shipment warehouse is required")
-            getDetails<SalesOrderItem>(salesOrder).forEach { item ->
+            salesOrder.details<SalesOrderItem>().forEach { item ->
                 val product = item.product ?: throw ValidationException("Shipment item product is required")
-                val stock = ServiceSupport.loadOrCreateStockItem(this, warehouse, product)
+                val stock = ServiceSupport.loadOrCreateStockItem(warehouse, product)
                 if (stock.quantityReserved < item.quantity || stock.quantityOnHand < item.quantity) {
                     throw ValidationException("Shipment cannot be completed because stock is inconsistent for product ${product.sku}")
                 }
                 stock.quantityReserved -= item.quantity
                 stock.quantityOnHand -= item.quantity
-                stock.lastUpdatedAt = ServiceSupport.now(this)
-                update(stock)
+                stock.lastUpdatedAt = ServiceSupport.now()
+                stock.update()
             }
             shipment.status = ShipmentStatus.SHIPPED
-            shipment.shippedAt = ServiceSupport.now(this)
-            update(shipment)
+            shipment.shippedAt = ServiceSupport.now()
+            shipment.update()
             salesOrder.status = SalesOrderStatus.SHIPPED
-            update(salesOrder)
+            salesOrder.update()
             shipment.toDetailsResponse()
         }
     }
