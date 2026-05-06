@@ -7,7 +7,7 @@ Ready-to-run sample projects for [Stormify](https://github.com/teras/stormify), 
 Clone the repository and step into the folder you are interested in:
 
 ```bash
-git clone -b 2.5.0 https://github.com/teras/stormify-examples.git
+git clone -b 2.5.1 https://github.com/teras/stormify-examples.git
 cd stormify-examples/<example-folder>
 ```
 

@@ -1,6 +1,6 @@
 plugins {
     kotlin("jvm") version "2.2.21"
-    id("onl.ycode.stormify") version "2.5.0"
+    id("onl.ycode.stormify") version "2.5.1"
     application
 }
 
