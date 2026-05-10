@@ -8,7 +8,7 @@ generated paths via the Stormify Gradle plugin.
 The examples live in a single GitHub repo. Clone it and step into this folder:
 
 ```bash
-git clone -b 2.5.1 https://github.com/teras/stormify-examples.git
+git clone -b 2.6.0 https://github.com/teras/stormify-examples.git
 cd stormify-examples/java-gradle
 ```
 
