@@ -26,7 +26,7 @@ all source code remains pure Java.
 
 - **Schema setup** with raw SQL (`executeUpdate`)
 - **CRUD operations** — create, findById, findAll, update, delete
-- **Entity references** with lazy loading (`AutoTable` + `populate()`)
+- **Entity references** with lazy loading (`AutoTable` + `hydrate()`)
 - **Transactions** with automatic rollback on exception
 - **Type-safe paths** from the plugin-generated `Tables` object
 - **Raw SQL JOIN query** returning `Map<String, Object>` results

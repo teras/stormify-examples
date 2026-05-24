@@ -10,7 +10,7 @@ import onl.ycode.stormify.DbValue;
  * The {@code user} field is a reference to a User entity — Stormify resolves it
  * automatically from the {@code user_id} foreign key column.
  *
- * <p>Non-primary-key getters/setters call {@code populate()} to trigger lazy loading
+ * <p>Non-primary-key getters/setters call {@code hydrate()} to trigger lazy loading
  * when the entity was obtained as a reference (e.g. from another entity's foreign key).
  */
 @DbTable
@@ -45,20 +45,20 @@ public class Task extends AutoTable {
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
 
-    public String getTitle() { populate(); return title; }
-    public void setTitle(String title) { populate(); this.title = title; }
+    public String getTitle() { hydrate(); return title; }
+    public void setTitle(String title) { hydrate(); this.title = title; }
 
-    public String getDescription() { populate(); return description; }
-    public void setDescription(String description) { populate(); this.description = description; }
+    public String getDescription() { hydrate(); return description; }
+    public void setDescription(String description) { hydrate(); this.description = description; }
 
-    public boolean isCompleted() { populate(); return isCompleted; }
-    public void setCompleted(boolean completed) { populate(); isCompleted = completed; }
+    public boolean isCompleted() { hydrate(); return isCompleted; }
+    public void setCompleted(boolean completed) { hydrate(); isCompleted = completed; }
 
-    public Priority getPriority() { populate(); return priority; }
-    public void setPriority(Priority priority) { populate(); this.priority = priority; }
+    public Priority getPriority() { hydrate(); return priority; }
+    public void setPriority(Priority priority) { hydrate(); this.priority = priority; }
 
-    public User getUser() { populate(); return user; }
-    public void setUser(User user) { populate(); this.user = user; }
+    public User getUser() { hydrate(); return user; }
+    public void setUser(User user) { hydrate(); this.user = user; }
 
     @Override
     public String toString() {

@@ -41,7 +41,7 @@ class TasksViewModel(app: Application) : AndroidViewModel(app) {
             // first time it's read. Touching `task.user` here forces the load
             // before we hand the data to Compose, so the UI never blocks the
             // main thread on a follow-up SELECT.
-            val loadedTasks = findAll<Task>().onEach { it.user?.let { u -> stormify.populate(u) } }
+            val loadedTasks = findAll<Task>().onEach { it.user?.let { u -> stormify.refresh(u) } }
             val loadedUsers = findAll<User>()
             loadedTasks to loadedUsers
         }

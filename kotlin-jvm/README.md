@@ -15,7 +15,7 @@ cd stormify-examples/kotlin-jvm
 
 Both entities extend `AutoTable` with `by db()` property delegates for **automatic lazy-loading**. The `Task.user` field is a reference to a `User` entity — Stormify resolves it from the `user_id` foreign key column, and its data is loaded transparently on first property access.
 
-Compared to the Java example, notice how Kotlin's `by db()` delegates replace manual `populate()` calls, and the DSL-style transactions make the code more concise.
+Compared to the Java example, notice how Kotlin's `by db()` delegates replace manual `hydrate()` calls, and the DSL-style transactions make the code more concise.
 
 ## What it demonstrates
 

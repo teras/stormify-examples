@@ -18,7 +18,7 @@ public class Main {
         ds.setUrl("jdbc:sqlite:target/demo.db");
 
         // Initialize Stormify (Java-friendly wrapper) and set as default
-        // so that AutoTable.populate() can find it for lazy-loading
+        // so that AutoTable.hydrate() can find it for lazy-loading
         final StormifyJ stormify = new StormifyJ(ds).asDefault();
 
         // === Schema Setup (Low-Level SQL API) ===
@@ -78,14 +78,14 @@ public class Main {
         System.out.println("Found task: " + foundTask);
 
         // === Reference loading demo ===
-        // Task extends AutoTable, so accessing task.getUser() auto-populates the Task.
+        // Task extends AutoTable, so accessing task.getUser() auto-hydrates the Task.
         // But User is a plain class — it comes back with only the ID filled in.
-        // We must explicitly populate it to get the remaining fields.
+        // We must explicitly refresh it to get the remaining fields.
         System.out.println("\n=== Reference Loading ===");
-        User userRef = foundTask.getUser();           // auto-populated by Task (AutoTable)
-        System.out.println("Before populate: " + userRef);   // User(id=1, name=null, email=null)
-        stormify.populate(userRef);
-        System.out.println("After populate:  " + userRef);   // User(id=1, name=Alice, email=alice@example.com)
+        User userRef = foundTask.getUser();           // auto-hydrated by Task (AutoTable)
+        System.out.println("Before refresh: " + userRef);   // User(id=1, name=null, email=null)
+        stormify.refresh(userRef);
+        System.out.println("After refresh:  " + userRef);   // User(id=1, name=Alice, email=alice@example.com)
 
         System.out.println("\n=== Find All ===");
         List<Task> allTasks = stormify.findAll(Task.class);

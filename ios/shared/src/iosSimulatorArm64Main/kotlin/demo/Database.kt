@@ -95,7 +95,7 @@ object Database {
 
 fun getAllTasks(): List<Task> {
     val s = Database.open()
-    return findAll<Task>().onEach { it.user?.let { u -> s.populate(u) } }
+    return findAll<Task>().onEach { it.user?.let { u -> s.refresh(u) } }
 }
 
 fun getAllUsers(): List<User> {

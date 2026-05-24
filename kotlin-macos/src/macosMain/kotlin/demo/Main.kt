@@ -65,14 +65,14 @@ fun main() {
     println("Found task: $foundTask")
 
     // === Reference loading demo ===
-    // Task extends AutoTable, so accessing task.user auto-populates the Task.
+    // Task extends AutoTable, so accessing task.user auto-hydrates the Task.
     // But User is a plain class — it comes back with only the ID filled in.
-    // We must explicitly populate it to get the remaining fields.
+    // We must explicitly refresh it to get the remaining fields.
     println("\n=== Reference Loading ===")
-    val userRef = foundTask!!.user           // auto-populated by Task (AutoTable)
-    println("Before populate: $userRef")     // User(id=1, name=, email=)
-    stormify.populate(userRef!!)
-    println("After populate:  $userRef")     // User(id=1, name=Alice, email=alice@example.com)
+    val userRef = foundTask!!.user           // auto-hydrated by Task (AutoTable)
+    println("Before refresh: $userRef")     // User(id=1, name=, email=)
+    stormify.refresh(userRef!!)
+    println("After refresh:  $userRef")     // User(id=1, name=Alice, email=alice@example.com)
 
     println("\n=== Find All ===")
     val allTasks = findAll<Task>()

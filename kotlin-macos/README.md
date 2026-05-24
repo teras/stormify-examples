@@ -15,13 +15,13 @@ cd stormify-examples/kotlin-macos
 
 This example runs as a **native macOS binary** — both `macosArm64` (Apple Silicon) and `macosX64` (Intel) targets are built, sharing source code through the `macosMain` intermediate source set. No JVM required at runtime. It uses Stormify's native SQLite driver via KDBC. Entity metadata is generated at compile time by the KSP annotation processor (`annproc`), which is required on native platforms.
 
-The `Task` entity extends `AutoTable` with `by db()` delegates for automatic lazy-loading. The `User` entity is a plain class — references to it must be populated explicitly via `stormify.populate()`.
+The `Task` entity extends `AutoTable` with `by db()` delegates for automatic lazy-loading. The `User` entity is a plain class — references to it must be populated explicitly via `stormify.refresh()`.
 
 ## What it demonstrates
 
 - **Native binary** — compiles to a standalone macOS executable
 - **KSP annotation processor** — generates entity metadata at compile time
-- **AutoTable vs plain class** — `Task` auto-populates references, `User` requires explicit `populate()`
+- **AutoTable vs plain class** — `Task` auto-hydrates references, `User` requires explicit `refresh()`
 - **CRUD operations** — create, findById, findAll, update, delete
 - **Transaction DSL** with automatic rollback on exception
 - **Raw SQL JOIN query** returning `Map<String, Any?>` results

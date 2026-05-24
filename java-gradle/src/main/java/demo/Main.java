@@ -82,9 +82,9 @@ public class Main {
         // === Reference loading demo ===
         System.out.println("\n=== Reference Loading ===");
         User userRef = foundTask.getUser();
-        System.out.println("Before populate: " + userRef);
-        stormify.populate(userRef);
-        System.out.println("After populate:  " + userRef);
+        System.out.println("Before refresh: " + userRef);
+        stormify.refresh(userRef);
+        System.out.println("After refresh:  " + userRef);
 
         System.out.println("\n=== Find All ===");
         List<Task> allTasks = stormify.findAll(Task.class);

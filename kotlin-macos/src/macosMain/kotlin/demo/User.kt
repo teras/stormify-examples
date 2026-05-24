@@ -5,7 +5,7 @@ import onl.ycode.stormify.*
 /**
  * User entity — a plain class without AutoTable.
  * When obtained as a reference (e.g. from Task.user), only the ID is set.
- * Call stormify.populate(user) explicitly to load the remaining fields.
+ * Call stormify.refresh(user) explicitly to load the remaining fields.
  *
  * Compare with Task, which extends AutoTable and loads fields automatically.
  */
