@@ -1,40 +1,43 @@
 package com.example.kotlinrest.service.masterdata
 
 import com.example.kotlinrest.dto.common.PagedResponse
-import com.example.kotlinrest.dto.masterdata.CreateCustomerRequest
 import com.example.kotlinrest.dto.masterdata.CustomerDetailsResponse
 import com.example.kotlinrest.dto.masterdata.CustomerListItemResponse
-import com.example.kotlinrest.dto.masterdata.UpdateCustomerRequest
+import com.example.kotlinrest.dto.masterdata.CustomerRequest
+import com.example.kotlinrest.dto.masterdata.toDetailsResponse
+import com.example.kotlinrest.dto.masterdata.toListItemResponse
 import com.example.kotlinrest.entity.Customer
 import com.example.kotlinrest.entity.CustomerType
+import com.example.kotlinrest.db.catchingConstraints
 import com.example.kotlinrest.exception.EntityNotFoundException
 import com.example.kotlinrest.exception.ValidationException
-import com.example.kotlinrest.mapper.toDetailsResponse
-import com.example.kotlinrest.mapper.toListItemResponse
 import com.example.kotlinrest.service.support.CsvSupport
-import com.example.kotlinrest.service.support.addEnumFacet
 import com.example.kotlinrest.service.support.PagedQuerySupport
 import onl.ycode.stormify.*
 import onl.ycode.stormify.biglist.PageSpec
+import onl.ycode.stormify.biglist.Facet
 import onl.ycode.stormify.biglist.PagedQuery
+import onl.ycode.stormify.coroutines.SuspendStormify
 
-class CustomerService {
+internal class CustomerService(private val async: SuspendStormify) {
     private val query = PagedQuery<Customer>().apply {
         addFacet("search", "name", "email", "city", "country").isSortable = false
         addFacet("name", "name")
         addFacet("email", "email")
         addFacet("city", "city")
         addFacet("country", "country")
-        addEnumFacet<CustomerType>("customerType", "customer.customer_type")
+        // `enumAsString` stores the name, so the column is already the text to filter on.
+        addSqlFacet("customerType", "customer.customer_type", Facet.TEXT)
         addFacet("active", mapOf("true" to 1, "false" to 0), "active")
     }
 
-    fun search(spec: PageSpec): PagedResponse<CustomerListItemResponse> =
+    suspend fun search(spec: PageSpec): PagedResponse<CustomerListItemResponse> = async.withConnection {
         PagedQuerySupport.execute(query, spec, defaultSortAlias = "name") { it.toListItemResponse() }
+    }
 
-    fun getById(id: Int): CustomerDetailsResponse = load(id).toDetailsResponse()
+    suspend fun getById(id: Int): CustomerDetailsResponse = async.withConnection { load(id).toDetailsResponse() }
 
-    fun create(request: CreateCustomerRequest): CustomerDetailsResponse {
+    suspend fun create(request: CustomerRequest): CustomerDetailsResponse = async.withConnection {
         validate(request.name, "Customer name")
         validate(request.email, "Customer email")
         validate(request.phone, "Customer phone")
@@ -50,10 +53,10 @@ class CustomerService {
             active = request.active
         }
         customer.create()
-        return customer.toDetailsResponse()
+        customer.toDetailsResponse()
     }
 
-    fun update(id: Int, request: UpdateCustomerRequest): CustomerDetailsResponse {
+    suspend fun update(id: Int, request: CustomerRequest): CustomerDetailsResponse = async.withConnection {
         validate(request.name, "Customer name")
         validate(request.email, "Customer email")
         validate(request.phone, "Customer phone")
@@ -69,13 +72,17 @@ class CustomerService {
             active = request.active
         }
         customer.update()
-        return customer.toDetailsResponse()
+        customer.toDetailsResponse()
     }
 
-    fun delete(id: Int) {
-        Customer(id).delete()
+    suspend fun delete(id: Int): Unit = async.withConnection {
+        // Look the row up first: deleting by a bare id reports success even when
+        // nothing matched, so a wrong id would answer 204 instead of 404.
+        val customer = load(id)
+        catchingConstraints("This customer is still referenced and cannot be deleted") {
+            customer.delete()
+        }
     }
-
 
     fun exportCsv(spec: PageSpec, writeLine: (String) -> Unit) {
         val columns = listOf<Pair<String, (CustomerListItemResponse) -> Any?>>(

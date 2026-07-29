@@ -33,5 +33,8 @@ open iosApp.xcodeproj
 ## Notes
 
 - Requires macOS with Xcode installed.
-- Targets iOS 16+ (iosArm64 for device, iosSimulatorArm64 for simulator).
-- The SQLite database is created in the app's temporary directory.
+- The SQLite database is created in the app's **Documents** directory
+  (`NSDocumentDirectory`), so it survives restarts. Delete the app to start from a
+  clean seed.
+- Targets iOS 16+: `iosArm64` (device), `iosSimulatorArm64` and `iosX64` (simulator on
+  Apple Silicon and on Intel).

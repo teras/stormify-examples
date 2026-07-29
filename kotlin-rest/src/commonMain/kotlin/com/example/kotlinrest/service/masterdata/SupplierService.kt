@@ -1,22 +1,23 @@
 package com.example.kotlinrest.service.masterdata
 
 import com.example.kotlinrest.dto.common.PagedResponse
-import com.example.kotlinrest.dto.masterdata.CreateSupplierRequest
 import com.example.kotlinrest.dto.masterdata.SupplierDetailsResponse
 import com.example.kotlinrest.dto.masterdata.SupplierListItemResponse
-import com.example.kotlinrest.dto.masterdata.UpdateSupplierRequest
+import com.example.kotlinrest.dto.masterdata.SupplierRequest
+import com.example.kotlinrest.dto.masterdata.toDetailsResponse
+import com.example.kotlinrest.dto.masterdata.toListItemResponse
 import com.example.kotlinrest.entity.Supplier
+import com.example.kotlinrest.db.catchingConstraints
 import com.example.kotlinrest.exception.EntityNotFoundException
 import com.example.kotlinrest.exception.ValidationException
-import com.example.kotlinrest.mapper.toDetailsResponse
-import com.example.kotlinrest.mapper.toListItemResponse
 import com.example.kotlinrest.service.support.CsvSupport
 import com.example.kotlinrest.service.support.PagedQuerySupport
 import onl.ycode.stormify.*
 import onl.ycode.stormify.biglist.PageSpec
 import onl.ycode.stormify.biglist.PagedQuery
+import onl.ycode.stormify.coroutines.SuspendStormify
 
-class SupplierService {
+internal class SupplierService(private val async: SuspendStormify) {
     private val query = PagedQuery<Supplier>().apply {
         addFacet("search", "name", "contactName", "city", "country").isSortable = false
         addFacet("name", "name")
@@ -26,12 +27,13 @@ class SupplierService {
         addFacet("active", mapOf("true" to 1, "false" to 0), "active")
     }
 
-    fun search(spec: PageSpec): PagedResponse<SupplierListItemResponse> =
+    suspend fun search(spec: PageSpec): PagedResponse<SupplierListItemResponse> = async.withConnection {
         PagedQuerySupport.execute(query, spec, defaultSortAlias = "name") { it.toListItemResponse() }
+    }
 
-    fun getById(id: Int): SupplierDetailsResponse = load(id).toDetailsResponse()
+    suspend fun getById(id: Int): SupplierDetailsResponse = async.withConnection { load(id).toDetailsResponse() }
 
-    fun create(request: CreateSupplierRequest): SupplierDetailsResponse {
+    suspend fun create(request: SupplierRequest): SupplierDetailsResponse = async.withConnection {
         validate(request.name, "Supplier name")
         validate(request.contactName, "Supplier contact name")
         validate(request.email, "Supplier email")
@@ -48,10 +50,10 @@ class SupplierService {
             active = request.active
         }
         supplier.create()
-        return supplier.toDetailsResponse()
+        supplier.toDetailsResponse()
     }
 
-    fun update(id: Int, request: UpdateSupplierRequest): SupplierDetailsResponse {
+    suspend fun update(id: Int, request: SupplierRequest): SupplierDetailsResponse = async.withConnection {
         validate(request.name, "Supplier name")
         validate(request.contactName, "Supplier contact name")
         validate(request.email, "Supplier email")
@@ -68,13 +70,17 @@ class SupplierService {
             active = request.active
         }
         supplier.update()
-        return supplier.toDetailsResponse()
+        supplier.toDetailsResponse()
     }
 
-    fun delete(id: Int) {
-        Supplier(id).delete()
+    suspend fun delete(id: Int): Unit = async.withConnection {
+        // Look the row up first: deleting by a bare id reports success even when
+        // nothing matched, so a wrong id would answer 204 instead of 404.
+        val supplier = load(id)
+        catchingConstraints("This supplier is still referenced and cannot be deleted") {
+            supplier.delete()
+        }
     }
-
 
     fun exportCsv(spec: PageSpec, writeLine: (String) -> Unit) {
         val columns = listOf<Pair<String, (SupplierListItemResponse) -> Any?>>(

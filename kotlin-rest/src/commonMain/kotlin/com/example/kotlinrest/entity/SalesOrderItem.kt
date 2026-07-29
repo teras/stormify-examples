@@ -12,6 +12,6 @@ class SalesOrderItem(
     @DbField(name = "product_id")
     var product: Product? by db(null)
     var quantity: Int by db(0)
-    var unitPrice: Double by db(0.0)
-    var lineTotal: Double by db(0.0)
+    var unitPrice: Long by db(0L)
+    var lineTotal: Long by db(0L)
 }

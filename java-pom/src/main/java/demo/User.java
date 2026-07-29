@@ -10,6 +10,12 @@ import javax.persistence.GenerationType;
  * Call stormify.refresh(user) explicitly to load the remaining fields.
  *
  * <p>Compare with Task, which extends AutoTable and loads fields automatically.
+ *
+ * <p>The mix of annotation families here is deliberate: this class is mapped with
+ * <em>JPA</em> annotations ({@code @Id}, {@code @GeneratedValue}) while Task uses
+ * Stormify's own ({@code @DbTable}, {@code @DbField}). Stormify understands both, and
+ * showing them side by side is the point — an existing JPA-annotated model does not have
+ * to be rewritten to be used here.
  */
 public class User {
 

@@ -32,7 +32,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -59,7 +59,7 @@ import demo.android.db.User
  */
 @Composable
 fun TasksScreen(viewModel: TasksViewModel = viewModel()) {
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
     var showAddDialog by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -237,7 +237,7 @@ private fun AddTaskDialog(
                         expanded = priorityExpanded,
                         onDismissRequest = { priorityExpanded = false },
                     ) {
-                        Priority.values().forEach { p ->
+                        Priority.entries.forEach { p ->
                             DropdownMenuItem(
                                 text = { Text(p.name) },
                                 onClick = { priority = p; priorityExpanded = false },

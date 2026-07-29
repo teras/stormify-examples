@@ -38,7 +38,7 @@ object Database {
             .openOrCreateDatabase("stormify-demo.db", Context.MODE_PRIVATE, null)
         // Foreign keys are off by default in Android SQLite — turn them on so
         // the FK from task.user_id → user.id is enforced.
-        db.execSQL("PRAGMA foreign_keys = ON")
+        db.setForeignKeyConstraintsEnabled(true)
 
         // Stormify(SQLiteDatabase) is the Android-specific convenience function
         // declared in stormify-android. It wraps the SQLiteDatabase in an

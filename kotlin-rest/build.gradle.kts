@@ -8,10 +8,6 @@ repositories {
     mavenCentral()
 }
 
-val ktorVersion = "3.3.3"
-val datetimeVersion = "0.7.1"
-val serializationVersion = "1.9.0"
-
 kotlin {
     val isMac = System.getProperty("os.name").startsWith("Mac")
 
@@ -23,19 +19,40 @@ kotlin {
         macosX64 { binaries { executable { entryPoint = "com.example.kotlinrest.main" } } }
     }
 
+    // Create the standard intermediate source sets (nativeMain, …) so a custom one can hang
+    // off nativeMain below. Declaring a dependsOn edge otherwise suppresses the default tree.
+    applyDefaultHierarchyTemplate()
+
+    compilerOptions {
+        // The entities apply @DbField to constructor parameters; opt in to the future
+        // param+property target so the annotation stays warning-free (KT-73255).
+        freeCompilerArgs.add("-Xannotation-default-target=param-property")
+    }
+
     sourceSets {
         val commonMain by getting {
             dependencies {
-                implementation("org.jetbrains.kotlinx:kotlinx-datetime:$datetimeVersion")
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationVersion")
-                implementation("io.ktor:ktor-server-core:$ktorVersion")
-                implementation("io.ktor:ktor-server-cio:$ktorVersion")
-                implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
-                implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
-                implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
-                implementation("io.ktor:ktor-server-default-headers:$ktorVersion")
-                implementation("io.ktor:ktor-server-cors:$ktorVersion")
+                implementation(libs.kotlinx.datetime)
+                implementation(libs.kotlinx.serialization.json)
+                implementation(libs.kotlinx.coroutines.core)
+                implementation(libs.bundles.ktor.server)
             }
+        }
+        val commonTest by getting {
+            dependencies {
+                implementation(kotlin("test"))
+                implementation(libs.kotlinx.coroutines.test)
+            }
+        }
+        // POSIX and Windows disagree on mkdir's arity, so the filesystem actual splits here:
+        // the unix-like targets share one copy, mingw gets its own.
+        val nativeMain by getting
+        val posixMain by creating { dependsOn(nativeMain) }
+        val linuxX64Main by getting { dependsOn(posixMain) }
+        val linuxArm64Main by getting { dependsOn(posixMain) }
+        if (isMac) {
+            val macosArm64Main by getting { dependsOn(posixMain) }
+            val macosX64Main by getting { dependsOn(posixMain) }
         }
     }
 }

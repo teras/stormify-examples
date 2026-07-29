@@ -47,7 +47,7 @@ const columns: ColDef<ShipmentListItem>[] = [
   { field: "trackingCode", headerName: "Tracking", flex: 1.1 },
   {
     field: "status", headerName: "Status", flex: 0.8,
-    filter: EnumFilter, filterParams: { options: ["PREPARING", "SHIPPED", "DELIVERED", "CANCELLED"] },
+    filter: EnumFilter, filterParams: { options: ["PREPARING", "SHIPPED"] },
   },
   { field: "shippedAt", headerName: "Shipped At", flex: 1 },
 ];

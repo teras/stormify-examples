@@ -14,7 +14,7 @@ class Product(
     var category: Category? by db(null)
     @DbField(name = "supplier_id")
     var supplier: Supplier? by db(null)
-    var unitPrice: Double by db(0.0)
+    var unitPrice: Long by db(0L)
     var reorderLevel: Int by db(0)
     var active: Boolean by db(true)
 }

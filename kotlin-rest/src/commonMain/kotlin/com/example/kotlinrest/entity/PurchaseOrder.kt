@@ -12,9 +12,10 @@ class PurchaseOrder(
     var supplier: Supplier? by db(null)
     @DbField(name = "warehouse_id")
     var warehouse: Warehouse? by db(null)
+    @DbField(enumAsString = true)
     var status: PurchaseOrderStatus by db(PurchaseOrderStatus.DRAFT)
-    var orderedAt: String by db("")
-    var expectedAt: String by db("")
-    var receivedAt: String by db("")
+    var orderedAt: String? by db(null)
+    var expectedAt: String? by db(null)
+    var receivedAt: String? by db(null)
     var notes: String by db("")
 }

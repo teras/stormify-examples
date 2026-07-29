@@ -7,6 +7,7 @@ import onl.ycode.stormify.*
  * The [user] field is a reference to a User entity — Stormify resolves it
  * automatically from the user_id foreign key column.
  */
+@DbTable
 class Task(
     @DbField(primaryKey = true, autoIncrement = true)
     var id: Int? = null

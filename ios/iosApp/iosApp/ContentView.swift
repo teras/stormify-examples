@@ -24,13 +24,11 @@ struct ContentView: View {
                     List {
                         ForEach(tasks, id: \.id) { task in
                             TaskRow(task: task) {
-                                DatabaseKt.toggleCompleted(task: task)
-                                refresh()
+                                perform { DatabaseKt.toggleCompleted(task: task) }
                             }
                             .swipeActions(edge: .trailing) {
                                 Button(role: .destructive) {
-                                    DatabaseKt.deleteTask(task: task)
-                                    refresh()
+                                    perform { DatabaseKt.deleteTask(task: task) }
                                 } label: {
                                     Label("Delete", systemImage: "trash")
                                 }
@@ -47,17 +45,37 @@ struct ContentView: View {
             }
             .sheet(isPresented: $showAddSheet) {
                 AddTaskView(users: users) { title, desc, priority, owner in
-                    DatabaseKt.addTask(title: title, description: desc, priority: priority, owner: owner)
-                    refresh()
+                    perform {
+                        DatabaseKt.addTask(
+                            title: title, description: desc, priority: priority, owner: owner
+                        )
+                    }
                 }
             }
-            .onAppear { refresh() }
+            .task { await reload() }
         }
     }
 
-    private func refresh() {
-        tasks = DatabaseKt.getAllTasks()
-        users = DatabaseKt.getAllUsers()
+    /// Runs a database write off the main thread, then reloads.
+    ///
+    /// Every Stormify call here is blocking disk work. Calling it straight from a
+    /// SwiftUI action runs it on the main thread and stutters the UI, so the write is
+    /// pushed to a background task and only the state assignment comes back to the main
+    /// actor — the same split the Android demo makes with Dispatchers.IO.
+    private func perform(_ work: @escaping () -> Void) {
+        _Concurrency.Task.detached(priority: .userInitiated) {
+            work()
+            await reload()
+        }
+    }
+
+    @MainActor
+    private func reload() async {
+        let loaded = await _Concurrency.Task.detached(priority: .userInitiated) {
+            (DatabaseKt.getAllTasks(), DatabaseKt.getAllUsers())
+        }.value
+        tasks = loaded.0
+        users = loaded.1
     }
 }
 
@@ -85,9 +103,7 @@ struct TaskRow: View {
                 }
 
                 HStack {
-                    if let p = task.priority {
-                        PriorityBadge(priority: p)
-                    }
+                    PriorityBadge(priority: task.priority)
                     if let user = task.user {
                         Text(user.name ?? "")
                             .font(.caption2)
@@ -176,7 +192,9 @@ struct AddTaskView: View {
                 }
             }
             .onAppear {
-                selectedUser = users.first
+                // Only seed the picker, never overwrite a choice already made: onAppear
+                // fires again when the sheet comes back to the foreground.
+                if selectedUser == nil { selectedUser = users.first }
             }
         }
     }

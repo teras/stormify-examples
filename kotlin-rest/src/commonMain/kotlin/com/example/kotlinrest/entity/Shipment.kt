@@ -12,9 +12,9 @@ class Shipment(
     var salesOrder: SalesOrder? by db(null)
     @DbField(name = "warehouse_id")
     var warehouse: Warehouse? by db(null)
+    @DbField(enumAsString = true)
     var status: ShipmentStatus by db(ShipmentStatus.PREPARING)
     var carrier: String by db("")
     var trackingCode: String by db("")
-    var shippedAt: String by db("")
-    var deliveredAt: String by db("")
+    var shippedAt: String? by db(null)
 }

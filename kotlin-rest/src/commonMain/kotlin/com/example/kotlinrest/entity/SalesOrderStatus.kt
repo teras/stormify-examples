@@ -7,5 +7,4 @@ enum class SalesOrderStatus {
     DRAFT,
     CONFIRMED,
     SHIPPED,
-    CANCELLED,
 }

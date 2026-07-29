@@ -1,3 +1,4 @@
+import { formatMoney, toCents, toMajorUnits } from "../../utils/money";
 import AddRounded from "@mui/icons-material/AddRounded";
 import TaskAltRounded from "@mui/icons-material/TaskAltRounded";
 import {
@@ -48,11 +49,11 @@ const columns: ColDef<SalesOrderListItem>[] = [
   },
   {
     field: "status", headerName: "Status", flex: 0.8,
-    filter: EnumFilter, filterParams: { options: ["DRAFT", "CONFIRMED", "SHIPPED", "CANCELLED"] },
+    filter: EnumFilter, filterParams: { options: ["DRAFT", "CONFIRMED", "SHIPPED"] },
   },
   { field: "orderedAt", headerName: "Ordered", flex: 1 },
   { field: "confirmedAt", headerName: "Confirmed", flex: 1 },
-  { field: "totalAmount", headerName: "Total", flex: 0.8, filter: "agNumberColumnFilter", filterParams: numberFilterParams, valueFormatter: (p: ValueFormatterParams) => Number(p.value).toFixed(2) },
+  { field: "totalAmount", headerName: "Total", flex: 0.8, filter: "agNumberColumnFilter", filterParams: numberFilterParams, valueFormatter: (p: ValueFormatterParams) => formatMoney(Number(p.value)) },
 ];
 
 interface SalesOrderFormState {
@@ -74,7 +75,7 @@ function toRequest(form: SalesOrderFormState): SalesOrderInput {
     items: form.items.map((item) => ({
       productId: item.productId,
       quantity: item.quantity,
-      unitPrice: item.unitValue,
+      unitPrice: toCents(item.unitValue),
     })),
   };
 }
@@ -87,7 +88,7 @@ function fromDetails(details: SalesOrderDetails): SalesOrderFormState {
     items: details.items.map((item) => ({
       productId: item.productId ?? 0,
       quantity: item.quantity,
-      unitValue: item.unitPrice,
+      unitValue: toMajorUnits(item.unitPrice),
     })),
   };
 }
@@ -210,7 +211,7 @@ export function SalesOrdersPage() {
               rows={detailsQuery.data.items.map((item) => ({
                 key: item.id,
                 primary: `${item.productSku ?? "N/A"} · ${item.productName ?? "Unknown"}`,
-                secondary: `Qty ${item.quantity} · Price ${item.unitPrice.toFixed(2)} · Total ${item.lineTotal.toFixed(2)}`,
+                secondary: `Qty ${item.quantity} · Price ${formatMoney(item.unitPrice)} · Total ${formatMoney(item.lineTotal)}`,
               }))}
             />
           </Stack>

@@ -19,21 +19,61 @@ internal object PagedQuerySupport {
         return spec.copy(sorts = mapOf(defaultSortAlias to SortDir.ASC))
     }
 
+    /**
+     * Fails loudly when a service names a default sort that the query does not have.
+     *
+     * A sort alias is just a string, so a rename or a typo makes the default sort quietly
+     * do nothing — every page comes back in whatever order the database felt like, and no
+     * test notices because the rows are all still there. Checking it where the service
+     * declares it turns that into an error at the first request instead.
+     */
+    private fun <T : Any> requireSortAlias(query: PagedQuery<T>, alias: String?) {
+        if (alias == null) return
+        if (query.facets.none { it.alias == alias })
+            error("Default sort alias '$alias' is not a facet of this query. " +
+                "Available: ${query.facets.joinToString { it.alias }}")
+    }
+
     fun <T : Any, R> execute(
         query: PagedQuery<T>,
         spec: PageSpec,
         defaultSortAlias: String? = null,
         mapper: (T) -> R,
     ): PagedResponse<R> {
+        requireSortAlias(query, defaultSortAlias)
         val page = query.execute(normalizedSpec(spec, defaultSortAlias))
         return buildResponse(page, mapper)
+    }
+
+    /**
+     * Same as [execute], but the whole page is handed to [mapper] at once.
+     *
+     * Some rows need something the query did not select — the order totals, say. Mapping
+     * row by row would fetch that per row; mapping the page lets the caller fetch it for
+     * all of them in one query.
+     */
+    fun <T : Any, R> executePage(
+        query: PagedQuery<T>,
+        spec: PageSpec,
+        defaultSortAlias: String? = null,
+        mapper: (List<T>) -> List<R>,
+    ): PagedResponse<R> {
+        requireSortAlias(query, defaultSortAlias)
+        val page = query.execute(normalizedSpec(spec, defaultSortAlias))
+        return PagedResponse(
+            items = mapper(page.rows),
+            page = page.page,
+            pageSize = page.pageSize,
+            totalItems = page.total,
+            totalPages = page.totalPages,
+        )
     }
 
     fun <T, R> buildResponse(page: Page<T>, mapper: (T) -> R): PagedResponse<R> =
         PagedResponse(
             items = page.rows.map(mapper),
             page = page.page,
-            size = page.pageSize,
+            pageSize = page.pageSize,
             totalItems = page.total,
             totalPages = page.totalPages,
         )

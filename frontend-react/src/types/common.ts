@@ -11,7 +11,7 @@ export interface PageSpec {
 export interface PagedResponse<T> {
   items: T[];
   page: number;
-  size: number;
+  pageSize: number;
   totalItems: number;
   totalPages: number;
 }
@@ -22,10 +22,10 @@ export interface ErrorResponse {
   details?: Record<string, unknown>;
 }
 
-export interface ReferenceSummary {
+/** A minimal `{id, label}` pointer to a related row, as embedded in details responses. */
+export interface Ref {
   id: number;
-  name?: string;
-  label?: string;
+  label: string;
 }
 
 export interface SearchPayload {

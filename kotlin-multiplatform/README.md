@@ -20,14 +20,14 @@ Entity classes and all demo logic live in `commonMain`, while only the DataSourc
 - **Windows native** (`mingwX64`) uses the same KDBC driver
 - **macOS native** (`macosArm64`, `macosX64`) uses the same KDBC driver
 
-The **KSP annotation processor** generates entity metadata at compile time, which is required for native and works on JVM as well. Both entities extend `AutoTable` with `by db()` delegates for transparent lazy-loading of references.
+The **KSP annotation processor** generates entity metadata at compile time, which is required for native and works on JVM as well. `Task` extends `AutoTable` with `by db()` delegates for transparent lazy-loading of references; `User` is deliberately a plain class, so its references need an explicit `stormify.refresh()`.
 
 ## What it demonstrates
 
 - **Shared code** — entities and business logic in `commonMain`
 - **Platform-specific DataSource** — only the entry point differs per platform
 - **KSP annotation processor** — generates `TableInfo` for both targets
-- **Entity references** with lazy loading (`AutoTable` + `by db()`)
+- **AutoTable vs plain class** — `Task` auto-hydrates references, `User` requires explicit `refresh()`
 - **CRUD operations** — create, findById, findAll, update, delete
 - **Transaction DSL** with automatic rollback on exception
 - **Raw SQL JOIN query** returning `Map<String, Any?>` results

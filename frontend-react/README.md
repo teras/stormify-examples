@@ -17,7 +17,7 @@ This frontend needs a running backend to talk to. Start [`kotlin-rest`](../kotli
 
 ```bash
 cd ../kotlin-rest
-gradle run
+gradle runDebugExecutableLinuxX64
 ```
 
 Then, in a separate terminal:

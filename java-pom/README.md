@@ -15,13 +15,13 @@ cd stormify-examples/java-pom
 
 This example showcases **mix-and-match annotations**: the `User` entity uses standard **JPA annotations** (`@Id`, `@GeneratedValue`), while the `Task` entity uses **Stormify annotations** (`@DbTable`, `@DbField`). Both work seamlessly in the same project.
 
-Both entities extend `AutoTable` for **lazy-loaded references** — the `Task.user` field is automatically resolved from the `user_id` foreign key column, and its data is loaded on first access via `hydrate()`.
+`Task` extends `AutoTable` for **lazy-loaded references** — `Task.user` is resolved from the `user_id` foreign key column and loaded on first access via `hydrate()`. `User` is deliberately a plain class, so its references must be filled in explicitly with `stormify.refresh()`.
 
 ## What it demonstrates
 
 - **Schema setup** with raw SQL (`executeUpdate`)
 - **CRUD operations** — create, findById, findAll, update, delete
-- **Entity references** with lazy loading (`AutoTable` + `hydrate()`)
+- **AutoTable vs plain class** — `Task` auto-hydrates references, `User` requires explicit `refresh()`
 - **Transactions** with automatic rollback on exception
 - **Raw SQL JOIN query** returning `Map<String, Object>` results
 - **JPA + Stormify annotation** interoperability

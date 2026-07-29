@@ -1,3 +1,4 @@
+import { formatMoney } from "../utils/money";
 import { Box, Paper, Stack, Typography } from "@mui/material";
 import { useQueries } from "@tanstack/react-query";
 import { resources } from "../api/resources";
@@ -81,7 +82,7 @@ export function DashboardPage() {
                 <Paper key={item.id} variant="outlined" sx={{ p: 1.5 }}>
                   <Typography fontWeight={700}>{item.orderNumber}</Typography>
                   <Typography variant="body2" color="text.secondary">
-                    {item.supplierName} · {item.status} · {item.totalAmount.toFixed(2)}
+                    {item.supplierName} · {item.status} · {formatMoney(item.totalAmount)}
                   </Typography>
                 </Paper>
               ))}

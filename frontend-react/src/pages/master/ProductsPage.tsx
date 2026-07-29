@@ -1,3 +1,4 @@
+import { formatMoney } from "../../utils/money";
 import type { ColDef, ICellRendererParams, ValueFormatterParams } from "ag-grid-community";
 import { EnumFilter } from "../../components/EnumFilter";
 import { resources } from "../../api/resources";
@@ -29,7 +30,7 @@ const columns: ColDef<ProductListItem>[] = [
     headerName: "Unit Price",
     flex: 0.8,
     filter: "agNumberColumnFilter", filterParams: numberFilterParams,
-    valueFormatter: (p: ValueFormatterParams) => Number(p.value).toFixed(2),
+    valueFormatter: (p: ValueFormatterParams) => formatMoney(Number(p.value)),
   },
   { field: "active", headerName: "Active", width: 110, cellRenderer: (p: { value: unknown }) => (p.value ? "Yes" : "No"), filter: EnumFilter, filterParams: { options: [{ value: "true", label: "Yes" }, { value: "false", label: "No" }] } },
 ];

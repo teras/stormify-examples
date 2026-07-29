@@ -6,11 +6,9 @@ target/
 *.hprof
 local.properties
 
-# Runtime DB files
+# Runtime DB files. kotlin-rest creates and seeds its own on first run, so
+# nothing under data/ belongs in the repository.
 data/
-# ...except the pre-populated demo database for kotlin-rest.
-!kotlin-rest/data/
-!kotlin-rest/data/warehouse.db
 
 # Frontend (node/vite/TS)
 node_modules/

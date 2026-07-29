@@ -16,8 +16,11 @@ public class Main {
         new File("build/demo.db").delete();
 
         // Create a SQLite DataSource
+        // The schema below declares REFERENCES, but SQLite ignores foreign keys
+        // unless they are switched on per connection.
         SQLiteDataSource ds = new SQLiteDataSource();
         ds.setUrl("jdbc:sqlite:build/demo.db");
+        ds.setEnforceForeignKeys(true);
 
         // Initialize Stormify with the plugin-generated registrar. Pass
         // GeneratedEntities so no reflection is needed at runtime.
@@ -58,15 +61,15 @@ public class Main {
             System.out.println("Created: " + bob);
 
             System.out.println("\n=== Creating Tasks ===");
-            Task t1 = new Task(0, "Set up database", "Configure schema and indexes", false, Priority.HIGH, alice);
+            Task t1 = new Task(null, "Set up database", "Configure schema and indexes", false, Priority.HIGH, alice);
             stormify.create(t1);
             System.out.println("Created: " + t1);
 
-            Task t2 = new Task(0, "Write documentation", "API reference and examples", false, Priority.MEDIUM, alice);
+            Task t2 = new Task(null, "Write documentation", "API reference and examples", false, Priority.MEDIUM, alice);
             stormify.create(t2);
             System.out.println("Created: " + t2);
 
-            Task t3 = new Task(0, "Review pull request", "Check code style and tests", false, Priority.LOW, bob);
+            Task t3 = new Task(null, "Review pull request", "Check code style and tests", false, Priority.LOW, bob);
             stormify.create(t3);
             System.out.println("Created: " + t3);
         });
@@ -121,7 +124,7 @@ public class Main {
         try {
             stormify.transaction(() -> {
                 User u = stormify.findById(User.class, 1);
-                stormify.create(new Task(0, "Temporary task", "...", false, Priority.LOW, u));
+                stormify.create(new Task(null, "Temporary task", "...", false, Priority.LOW, u));
                 System.out.println("Task created inside transaction");
                 throw new RuntimeException("Something went wrong!");
             });

@@ -13,7 +13,7 @@ cd stormify-examples/kotlin-jvm
 
 ## Highlights
 
-Both entities extend `AutoTable` with `by db()` property delegates for **automatic lazy-loading**. The `Task.user` field is a reference to a `User` entity — Stormify resolves it from the `user_id` foreign key column, and its data is loaded transparently on first property access.
+The `Task` entity extends `AutoTable` with `by db()` property delegates for **automatic lazy-loading**: `Task.user` is resolved from the `user_id` foreign key column and its data arrives transparently on first property access. `User` is deliberately a **plain class** — references to it must be filled in explicitly with `stormify.refresh()`. The contrast between the two is the point of this example.
 
 Compared to the Java example, notice how Kotlin's `by db()` delegates replace manual `hydrate()` calls, and the DSL-style transactions make the code more concise.
 
@@ -21,7 +21,7 @@ Compared to the Java example, notice how Kotlin's `by db()` delegates replace ma
 
 - **Schema setup** with raw SQL (`executeUpdate`)
 - **CRUD operations** — create, findById, findAll, update, delete
-- **Entity references** with lazy loading (`AutoTable` + `by db()`)
+- **AutoTable vs plain class** — `Task` auto-hydrates references, `User` requires explicit `refresh()`
 - **Transaction DSL** with `stormify.transaction { ... }`
 - **Automatic rollback** on exception
 - **Raw SQL JOIN query** returning `Map<String, Any?>` results

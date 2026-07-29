@@ -1,5 +1,9 @@
 package com.example.kotlinrest.dto.transaction
 
+import com.example.kotlinrest.dto.common.Ref
+import com.example.kotlinrest.dto.common.pk
+import com.example.kotlinrest.dto.common.ref
+import com.example.kotlinrest.entity.Shipment
 import com.example.kotlinrest.entity.ShipmentStatus
 import kotlinx.serialization.Serializable
 
@@ -18,12 +22,6 @@ data class UpdateShipmentRequest(
 )
 
 @Serializable
-data class TransactionReferenceResponse(
-    val id: Int,
-    val label: String,
-)
-
-@Serializable
 data class ShipmentListItemResponse(
     val id: Int,
     val shipmentNumber: String,
@@ -34,19 +32,41 @@ data class ShipmentListItemResponse(
     val carrier: String,
     val trackingCode: String,
     val status: ShipmentStatus,
-    val shippedAt: String,
-    val deliveredAt: String,
+    val shippedAt: String?,
 )
 
 @Serializable
 data class ShipmentDetailsResponse(
     val id: Int,
     val shipmentNumber: String,
-    val salesOrder: TransactionReferenceResponse?,
-    val warehouse: TransactionReferenceResponse?,
+    val salesOrder: Ref?,
+    val warehouse: Ref?,
     val carrier: String,
     val trackingCode: String,
     val status: ShipmentStatus,
-    val shippedAt: String,
-    val deliveredAt: String,
+    val shippedAt: String?,
+)
+
+fun Shipment.toListItemResponse() = ShipmentListItemResponse(
+    id = pk(id),
+    shipmentNumber = shipmentNumber,
+    salesOrderId = salesOrder?.id,
+    salesOrderNumber = salesOrder?.orderNumber,
+    warehouseId = warehouse?.id,
+    warehouseName = warehouse?.name,
+    carrier = carrier,
+    trackingCode = trackingCode,
+    status = status,
+    shippedAt = shippedAt,
+)
+
+fun Shipment.toDetailsResponse() = ShipmentDetailsResponse(
+    id = pk(id),
+    shipmentNumber = shipmentNumber,
+    salesOrder = ref(salesOrder?.id, salesOrder?.orderNumber),
+    warehouse = ref(warehouse?.id, warehouse?.name),
+    carrier = carrier,
+    trackingCode = trackingCode,
+    status = status,
+    shippedAt = shippedAt,
 )

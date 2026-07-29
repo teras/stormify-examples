@@ -1,6 +1,6 @@
 package demo
 
-import onl.ycode.stormify.generated.GeneratedEntities
+import onl.ycode.stormify.generated.stormifyEntities
 import onl.ycode.kdbc.KdbcDataSource
 import onl.ycode.stormify.*
 import platform.Foundation.NSSearchPathForDirectoriesInDomains
@@ -14,14 +14,26 @@ import platform.Foundation.NSUserDomainMask
  * of the process, schema bootstrap on first launch, seed data if empty.
  */
 object Database {
+    @kotlin.concurrent.Volatile
     private var instance: Stormify? = null
 
-    fun open(): Stormify {
-        instance?.let { return it }
-        val s = createInstance()
-        instance = s
-        return s
+    /**
+     * Opens the database. Call this once, from app start, before any other function
+     * here. (Named `prepare` rather than `initialize` because Kotlin/Native renames
+     * anything starting with `init` when exporting to Objective-C.)
+     *
+     * A lazy singleton would be the shorter spelling and the wrong one: the app calls
+     * into these functions from background tasks, so two of them could reach a lazy
+     * initializer at the same time and each build its own instance. Initialising
+     * explicitly at a moment when only one thread is running removes the race instead
+     * of trying to guard it, and it makes the point of the lifecycle visible.
+     */
+    fun prepare() {
+        if (instance == null) instance = createInstance()
     }
+
+    fun open(): Stormify = instance
+        ?: error("Database.prepare() must be called at app start before any database call")
 
     private fun createInstance(): Stormify {
         val docs = NSSearchPathForDirectoriesInDomains(
@@ -29,8 +41,13 @@ object Database {
         ).first() as String
         val dbPath = "$docs/stormify-demo.db"
 
-        val ds = KdbcDataSource("jdbc:sqlite:$dbPath")
-        val stormify = Stormify(ds, GeneratedEntities).asDefault()
+        // SQLite disables foreign keys per connection by default, so the schema's
+        // ON DELETE CASCADE would never fire without this.
+        val ds = KdbcDataSource("jdbc:sqlite:$dbPath", initSql = "PRAGMA foreign_keys = ON")
+        // `stormifyEntities` rather than `GeneratedEntities`: the processor emits the
+        // latter only into leaf source sets, and this file is shared by the device and
+        // simulator targets. The shim is the handle intended for shared code.
+        val stormify = Stormify(ds, stormifyEntities).asDefault()
 
         bootstrapSchema(stormify)
         seedIfEmpty(stormify)
@@ -104,19 +121,20 @@ fun getAllUsers(): List<User> {
 }
 
 fun addTask(title: String, description: String, priority: Priority, owner: User) {
-    Database.open().transaction {
-        Task().apply {
-            this.title = title
-            this.description = description
-            this.priority = priority
-            this.user = owner
-        }.create()
-    }
+    Database.open()
+    // A single insert is already atomic; there is no second write that has to land
+    // with it, so there is no transaction to open.
+    Task().apply {
+        this.title = title
+        this.description = description
+        this.priority = priority
+        this.user = owner
+    }.create()
 }
 
 fun toggleCompleted(task: Task) {
-    task.isCompleted = !task.isCompleted
     Database.open()
+    task.isCompleted = !task.isCompleted
     task.update()
 }
 

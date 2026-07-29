@@ -6,6 +6,4 @@ import kotlinx.serialization.Serializable
 enum class ShipmentStatus {
     PREPARING,
     SHIPPED,
-    DELIVERED,
-    CANCELLED,
 }

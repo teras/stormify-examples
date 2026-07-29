@@ -20,7 +20,7 @@ kotlin {
 
 dependencies {
     implementation("org.xerial:sqlite-jdbc:3.47.2.0")
-    implementation("org.slf4j:slf4j-simple:1.7.36")
+    implementation("org.slf4j:slf4j-simple:2.0.16")
     implementation("javax.persistence:javax.persistence-api:2.2")
 }
 

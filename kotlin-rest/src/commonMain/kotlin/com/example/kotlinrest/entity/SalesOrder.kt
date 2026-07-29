@@ -12,8 +12,9 @@ class SalesOrder(
     var customer: Customer? by db(null)
     @DbField(name = "warehouse_id")
     var warehouse: Warehouse? by db(null)
+    @DbField(enumAsString = true)
     var status: SalesOrderStatus by db(SalesOrderStatus.DRAFT)
-    var orderedAt: String by db("")
-    var confirmedAt: String by db("")
+    var orderedAt: String? by db(null)
+    var confirmedAt: String? by db(null)
     var notes: String by db("")
 }

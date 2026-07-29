@@ -1,3 +1,4 @@
+import { formatMoney } from "../utils/money";
 import {
   Box,
   CircularProgress,
@@ -178,12 +179,12 @@ function renderProduct(d: ProductDetails) {
       <Row label="Name">{d.name}</Row>
       <Row label="Description">{d.description}</Row>
       <Row label="Category">
-        <RefLink type="category" id={d.category?.id} label={d.category?.name} />
+        <RefLink type="category" id={d.category?.id} label={d.category?.label} />
       </Row>
       <Row label="Supplier">
-        <RefLink type="supplier" id={d.supplier?.id} label={d.supplier?.name} />
+        <RefLink type="supplier" id={d.supplier?.id} label={d.supplier?.label} />
       </Row>
-      <Row label="Unit Price">{d.unitPrice.toFixed(2)}</Row>
+      <Row label="Unit Price">{formatMoney(d.unitPrice)}</Row>
       <Row label="Reorder Level">{d.reorderLevel}</Row>
       <Row label="Active">{d.active ? "Yes" : "No"}</Row>
     </Stack>
@@ -204,7 +205,7 @@ function renderPurchaseOrder(d: PurchaseOrderDetails) {
       <Row label="Ordered">{d.orderedAt}</Row>
       <Row label="Expected">{d.expectedAt}</Row>
       <Row label="Received">{d.receivedAt}</Row>
-      <Row label="Total">{d.totalAmount.toFixed(2)}</Row>
+      <Row label="Total">{formatMoney(d.totalAmount)}</Row>
       {d.notes && <Row label="Notes">{d.notes}</Row>}
       {d.items.length > 0 && (
         <>
@@ -214,7 +215,7 @@ function renderPurchaseOrder(d: PurchaseOrderDetails) {
             <Row key={item.id} label={`× ${item.quantity}`}>
               <RefLink type="product" id={item.productId} label={item.productName ?? item.productSku} />
               {" — "}
-              {item.lineTotal.toFixed(2)}
+              {formatMoney(item.lineTotal)}
             </Row>
           ))}
         </>
@@ -236,7 +237,7 @@ function renderSalesOrder(d: SalesOrderDetails) {
       <Row label="Status">{d.status}</Row>
       <Row label="Ordered">{d.orderedAt}</Row>
       <Row label="Confirmed">{d.confirmedAt}</Row>
-      <Row label="Total">{d.totalAmount.toFixed(2)}</Row>
+      <Row label="Total">{formatMoney(d.totalAmount)}</Row>
       {d.notes && <Row label="Notes">{d.notes}</Row>}
       {d.items.length > 0 && (
         <>
@@ -246,7 +247,7 @@ function renderSalesOrder(d: SalesOrderDetails) {
             <Row key={item.id} label={`× ${item.quantity}`}>
               <RefLink type="product" id={item.productId} label={item.productName ?? item.productSku} />
               {" — "}
-              {item.lineTotal.toFixed(2)}
+              {formatMoney(item.lineTotal)}
             </Row>
           ))}
         </>
@@ -269,7 +270,6 @@ function renderShipment(d: ShipmentDetails) {
       <Row label="Carrier">{d.carrier}</Row>
       <Row label="Tracking">{d.trackingCode}</Row>
       <Row label="Shipped">{d.shippedAt}</Row>
-      <Row label="Delivered">{d.deliveredAt}</Row>
     </Stack>
   );
 }

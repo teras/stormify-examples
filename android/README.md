@@ -29,7 +29,7 @@ cd stormify-examples/android
 Build the app:
 
 ```bash
-cd examples/android
+cd android
 gradle :app:assembleDebug
 ```
 
@@ -42,9 +42,9 @@ adb shell am start -n demo.android/.MainActivity
 
 ## Notes
 
-- `minSdk = 21`, `compileSdk = 34` — same floor as the Stormify Android library.
-- `local.properties` points at `~/Android/Sdk`. Edit it if your SDK lives
-  elsewhere.
+- `minSdk = 26`, `compileSdk = 34` — same floor as the Stormify Android library.
+- Gradle finds the Android SDK through `ANDROID_HOME`, or through a
+  `local.properties` file you create yourself (`sdk.dir=/path/to/Android/Sdk`).
 - The database file is created at
   `/data/data/demo.android/databases/stormify-demo.db`. Uninstall the app to
   start from a clean seed.

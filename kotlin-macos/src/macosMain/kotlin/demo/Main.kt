@@ -11,7 +11,9 @@ fun main() {
 
     // Create a native SQLite DataSource and initialize Stormify
     // GeneratedEntities registers entity metadata (required on native)
-    val ds = KdbcDataSource("jdbc:sqlite:build/demo.db")
+    // The schema below declares REFERENCES, but SQLite ignores foreign keys unless
+    // they are switched on per connection.
+    val ds = KdbcDataSource("jdbc:sqlite:build/demo.db", initSql = "PRAGMA foreign_keys = ON")
     val stormify = Stormify(ds, GeneratedEntities).asDefault()
 
     // === Schema Setup (Low-Level SQL API) ===

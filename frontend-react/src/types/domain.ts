@@ -1,7 +1,9 @@
+import type { Ref } from "./common";
+
 export type CustomerType = "RETAIL" | "WHOLESALE";
-export type PurchaseOrderStatus = "DRAFT" | "SUBMITTED" | "RECEIVED" | "CANCELLED";
-export type SalesOrderStatus = "DRAFT" | "CONFIRMED" | "SHIPPED" | "CANCELLED";
-export type ShipmentStatus = "PREPARING" | "SHIPPED" | "DELIVERED" | "CANCELLED";
+export type PurchaseOrderStatus = "DRAFT" | "RECEIVED";
+export type SalesOrderStatus = "DRAFT" | "CONFIRMED" | "SHIPPED";
+export type ShipmentStatus = "PREPARING" | "SHIPPED";
 
 export interface CategoryListItem {
   id: number;
@@ -68,8 +70,8 @@ export interface ProductDetails {
   sku: string;
   name: string;
   description: string;
-  category: { id: number; name: string } | null;
-  supplier: { id: number; name: string } | null;
+  category: Ref | null;
+  supplier: Ref | null;
   unitPrice: number;
   reorderLevel: number;
   active: boolean;
@@ -87,11 +89,6 @@ export interface StockListItem {
   availableQuantity: number;
   reorderLevel: number;
   lastUpdatedAt: string;
-}
-
-export interface TransactionReference {
-  id: number;
-  label: string;
 }
 
 export interface PurchaseOrderItemResponse {
@@ -121,8 +118,8 @@ export interface PurchaseOrderListItem {
 export interface PurchaseOrderDetails {
   id: number;
   orderNumber: string;
-  supplier: TransactionReference | null;
-  warehouse: TransactionReference | null;
+  supplier: Ref | null;
+  warehouse: Ref | null;
   status: PurchaseOrderStatus;
   orderedAt: string;
   expectedAt: string;
@@ -158,8 +155,8 @@ export interface SalesOrderListItem {
 export interface SalesOrderDetails {
   id: number;
   orderNumber: string;
-  customer: TransactionReference | null;
-  warehouse: TransactionReference | null;
+  customer: Ref | null;
+  warehouse: Ref | null;
   status: SalesOrderStatus;
   orderedAt: string;
   confirmedAt: string;
@@ -179,19 +176,17 @@ export interface ShipmentListItem {
   trackingCode: string;
   status: ShipmentStatus;
   shippedAt: string;
-  deliveredAt: string;
 }
 
 export interface ShipmentDetails {
   id: number;
   shipmentNumber: string;
-  salesOrder: TransactionReference | null;
-  warehouse: TransactionReference | null;
+  salesOrder: Ref | null;
+  warehouse: Ref | null;
   carrier: string;
   trackingCode: string;
   status: ShipmentStatus;
   shippedAt: string;
-  deliveredAt: string;
 }
 
 export interface CategoryInput {

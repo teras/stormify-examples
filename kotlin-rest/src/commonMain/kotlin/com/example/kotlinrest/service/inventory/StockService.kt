@@ -2,14 +2,16 @@ package com.example.kotlinrest.service.inventory
 
 import com.example.kotlinrest.dto.common.PagedResponse
 import com.example.kotlinrest.dto.inventory.StockListItemResponse
+import com.example.kotlinrest.dto.inventory.toListItemResponse
 import com.example.kotlinrest.entity.StockItem
 import com.example.kotlinrest.service.support.PagedQuerySupport
 import com.example.kotlinrest.service.support.CsvSupport
 import onl.ycode.stormify.biglist.Facet
 import onl.ycode.stormify.biglist.PageSpec
 import onl.ycode.stormify.biglist.PagedQuery
+import onl.ycode.stormify.coroutines.SuspendStormify
 
-class StockService {
+internal class StockService(private val async: SuspendStormify) {
     private val query = PagedQuery<StockItem>().apply {
         val product = addTableRef("product")
         addFacet("search", "warehouse.name", "product.sku", "product.name").also { it.isSortable = false }
@@ -45,22 +47,9 @@ class StockService {
         }
     }
 
-    fun search(spec: PageSpec): PagedResponse<StockListItemResponse> =
-        PagedQuerySupport.execute(query, spec, defaultSortAlias = "warehouse", mapper = ::toListItem)
-
-    private fun toListItem(stock: StockItem) = StockListItemResponse(
-        id = stock.id ?: 0,
-        warehouseId = stock.warehouse?.id,
-        warehouseName = stock.warehouse?.name,
-        productId = stock.product?.id,
-        productSku = stock.product?.sku,
-        productName = stock.product?.name,
-        quantityOnHand = stock.quantityOnHand,
-        quantityReserved = stock.quantityReserved,
-        availableQuantity = stock.quantityOnHand - stock.quantityReserved,
-        reorderLevel = stock.product?.reorderLevel ?: 0,
-        lastUpdatedAt = stock.lastUpdatedAt,
-    )
+    suspend fun search(spec: PageSpec): PagedResponse<StockListItemResponse> = async.withConnection {
+        PagedQuerySupport.execute(query, spec, defaultSortAlias = "warehouseName", mapper = StockItem::toListItemResponse)
+    }
 
     fun exportCsv(spec: PageSpec, writeLine: (String) -> Unit) {
         val columns = listOf<Pair<String, (StockListItemResponse) -> Any?>>(
@@ -74,6 +63,6 @@ class StockService {
             "reorderLevel" to { it.reorderLevel },
             "lastUpdatedAt" to { it.lastUpdatedAt },
         )
-        CsvSupport.stream(query, spec, columns, mapper = ::toListItem, writeLine = writeLine)
+        CsvSupport.stream(query, spec, columns, mapper = StockItem::toListItemResponse, writeLine = writeLine)
     }
 }

@@ -13,5 +13,5 @@ class StockItem(
     var product: Product? by db(null)
     var quantityOnHand: Int by db(0)
     var quantityReserved: Int by db(0)
-    var lastUpdatedAt: String by db("")
+    var lastUpdatedAt: String? by db(null)
 }

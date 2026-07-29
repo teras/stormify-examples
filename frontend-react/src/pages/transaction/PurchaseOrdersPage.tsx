@@ -1,3 +1,4 @@
+import { formatMoney, toCents, toMajorUnits } from "../../utils/money";
 import AddRounded from "@mui/icons-material/AddRounded";
 import MoveToInboxRounded from "@mui/icons-material/MoveToInboxRounded";
 import {
@@ -48,7 +49,7 @@ const columns: ColDef<PurchaseOrderListItem>[] = [
   },
   {
     field: "status", headerName: "Status", flex: 0.8,
-    filter: EnumFilter, filterParams: { options: ["DRAFT", "SUBMITTED", "RECEIVED", "CANCELLED"] },
+    filter: EnumFilter, filterParams: { options: ["DRAFT", "RECEIVED"] },
   },
   { field: "orderedAt", headerName: "Ordered", flex: 1 },
   { field: "expectedAt", headerName: "Expected", flex: 1 },
@@ -57,7 +58,7 @@ const columns: ColDef<PurchaseOrderListItem>[] = [
     headerName: "Total",
     flex: 0.8,
     filter: "agNumberColumnFilter", filterParams: numberFilterParams,
-    valueFormatter: (p: ValueFormatterParams) => Number(p.value).toFixed(2),
+    valueFormatter: (p: ValueFormatterParams) => formatMoney(Number(p.value)),
   },
 ];
 
@@ -88,7 +89,7 @@ function toRequest(form: PurchaseOrderFormState): PurchaseOrderInput {
     items: form.items.map((item) => ({
       productId: item.productId,
       quantity: item.quantity,
-      unitCost: item.unitValue,
+      unitCost: toCents(item.unitValue),
     })),
   };
 }
@@ -102,7 +103,7 @@ function fromDetails(details: PurchaseOrderDetails): PurchaseOrderFormState {
     items: details.items.map((item) => ({
       productId: item.productId ?? 0,
       quantity: item.quantity,
-      unitValue: item.unitCost,
+      unitValue: toMajorUnits(item.unitCost),
     })),
   };
 }
@@ -236,7 +237,7 @@ export function PurchaseOrdersPage() {
               rows={detailsQuery.data.items.map((item) => ({
                 key: item.id,
                 primary: `${item.productSku ?? "N/A"} · ${item.productName ?? "Unknown"}`,
-                secondary: `Qty ${item.quantity} · Cost ${item.unitCost.toFixed(2)} · Total ${item.lineTotal.toFixed(2)}`,
+                secondary: `Qty ${item.quantity} · Cost ${formatMoney(item.unitCost)} · Total ${formatMoney(item.lineTotal)}`,
               }))}
             />
           </Stack>

@@ -12,6 +12,7 @@ class Customer(
     var phone: String by db("")
     var city: String by db("")
     var country: String by db("")
+    @DbField(enumAsString = true)
     var customerType: CustomerType by db(CustomerType.RETAIL)
     var active: Boolean by db(true)
 }

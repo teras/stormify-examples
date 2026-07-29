@@ -17,7 +17,7 @@ class Task(
     var title: String by db("")
     var description: String by db("")
     var isCompleted: Boolean by db(false)
-    var priority: Priority? by db(null)
+    var priority: Priority by db(Priority.MEDIUM)
     @DbField(name = "user_id")
     var user: User? by db(null)
 

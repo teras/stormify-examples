@@ -1,1 +1,1 @@
-rootProject.name = "kotlin-rest"
+rootProject.name = "stormify-kotlin-rest-demo"
