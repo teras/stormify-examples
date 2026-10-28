@@ -2,7 +2,7 @@ plugins {
     java
     application
     kotlin("jvm") version "2.2.21"                // required by the Stormify plugin (KSP runs on the Kotlin compiler)
-    id("onl.ycode.stormify") version "2.6.0"
+    id("onl.ycode.stormify") version "3.0.0"
 }
 
 repositories {

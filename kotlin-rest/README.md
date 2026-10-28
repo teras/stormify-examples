@@ -14,7 +14,7 @@ read, not reused wholesale.
 The examples live in a single GitHub repo. Clone it and step into this folder:
 
 ```bash
-git clone -b 2.6.0 https://github.com/teras/stormify-examples.git
+git clone -b 3.0.0 https://github.com/teras/stormify-examples.git
 cd stormify-examples/kotlin-rest
 ```
 
