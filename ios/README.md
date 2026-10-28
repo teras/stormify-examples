@@ -18,7 +18,11 @@ cd stormify-examples/ios
 - Using `KdbcDataSource` with SQLite on iOS (platform SQLite via C interop).
 - The KSP `annproc` processor generating entity metadata at compile time
   (mandatory on native — reflection is not available).
-- CRUD operations, transactions with rollback, and entity references.
+- CRUD operations from the SwiftUI list: tapping a row toggles the task's
+  completion, a swipe deletes it, and the + button adds a new one. The first
+  launch seeds the database inside one `transaction { }`.
+- Entity references: each `Task` resolves its `User`, which is refreshed before
+  the list is shown, so each row names its owner.
 - Kotlin/Native framework consumed by a SwiftUI app.
 
 ## Build & run

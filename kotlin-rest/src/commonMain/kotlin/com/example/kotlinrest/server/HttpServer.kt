@@ -128,11 +128,6 @@ internal fun Application.warehouseModule(settings: AppSettings, stormify: Stormi
         }
 
         exception<Throwable> { call, cause ->
-            // A transaction rolling back rethrows wrapped, so the deliberate error is
-            // one level down. Unwrap it rather than reporting a write failure as a crash.
-            val api = cause as? ApiException ?: cause.cause as? ApiException
-            if (api != null) return@exception call.respondError(api)
-
             // Log what actually happened; answer with something that leaks nothing —
             // driver messages carry SQL and column names.
             call.application.log.error("Unhandled error", cause)

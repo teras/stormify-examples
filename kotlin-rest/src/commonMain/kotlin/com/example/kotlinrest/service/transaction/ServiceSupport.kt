@@ -2,12 +2,8 @@ package com.example.kotlinrest.service.transaction
 
 import com.example.kotlinrest.support.now
 import com.example.kotlinrest.support.isValidInstant
-import com.example.kotlinrest.entity.Product
-import com.example.kotlinrest.entity.Warehouse
 import com.example.kotlinrest.exception.ConflictException
-import com.example.kotlinrest.exception.ReferenceNotFoundException
 import com.example.kotlinrest.exception.ValidationException
-import onl.ycode.stormify.*
 
 internal object ServiceSupport {
     /**
@@ -38,10 +34,4 @@ internal object ServiceSupport {
         if (!value.isNullOrBlank() && !isValidInstant(value))
             throw ValidationException("$label must be a valid ISO-8601 timestamp", field)
     }
-
-    fun loadProduct(id: Int): Product =
-        findById<Product>(id) ?: throw ReferenceNotFoundException("Product", "productId", id)
-
-    fun loadWarehouse(id: Int): Warehouse =
-        findById<Warehouse>(id) ?: throw ReferenceNotFoundException("Warehouse", "warehouseId", id)
 }

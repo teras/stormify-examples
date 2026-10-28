@@ -32,7 +32,8 @@ internal class CustomerService(private val async: SuspendStormify) {
     }
 
     suspend fun search(spec: PageSpec): PagedResponse<CustomerListItemResponse> = async.withConnection {
-        PagedQuerySupport.execute(query, spec, defaultSortAlias = "name") { it.toListItemResponse() }
+        val page = query.execute(PagedQuerySupport.searchSpec(query, spec, defaultSortAlias = "name"))
+        PagedQuerySupport.buildResponse(page) { it.toListItemResponse() }
     }
 
     suspend fun getById(id: Int): CustomerDetailsResponse = async.withConnection { load(id).toDetailsResponse() }
@@ -94,7 +95,10 @@ internal class CustomerService(private val async: SuspendStormify) {
             "customerType" to { it.customerType },
             "active" to { it.active }
         )
-        CsvSupport.stream(query, spec, columns, mapper = { it.toListItemResponse() }, writeLine = writeLine)
+        writeLine(CsvSupport.header(columns))
+        // forEachStreaming walks the whole result set, so the pagination fields of the
+        // spec are ignored on this path: page 0 with a large page size.
+        query.forEachStreaming(spec.copy(page = 0, pageSize = 1000)) { writeLine(CsvSupport.row(columns, it.toListItemResponse())) }
     }
 
     private fun load(id: Int): Customer =

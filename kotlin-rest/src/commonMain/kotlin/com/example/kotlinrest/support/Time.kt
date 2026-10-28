@@ -3,6 +3,7 @@
 package com.example.kotlinrest.support
 
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.number
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
 import kotlin.time.Instant
@@ -12,9 +13,9 @@ internal fun Instant.toFixedIsoString(): String {
     return buildString {
         append(dt.year.toString().padStart(4, '0'))
         append('-')
-        append(dt.monthNumber.toString().padStart(2, '0'))
+        append(dt.month.number.toString().padStart(2, '0'))
         append('-')
-        append(dt.dayOfMonth.toString().padStart(2, '0'))
+        append(dt.day.toString().padStart(2, '0'))
         append('T')
         append(dt.hour.toString().padStart(2, '0'))
         append(':')

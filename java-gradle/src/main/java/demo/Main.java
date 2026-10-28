@@ -129,6 +129,7 @@ public class Main {
                 throw new RuntimeException("Something went wrong!");
             });
         } catch (RuntimeException e) {
+            // The exception of the block arrives here unchanged, after the rollback
             System.out.println("Transaction failed: " + e.getMessage());
         }
         int countAfter = stormify.findAll(Task.class).size();

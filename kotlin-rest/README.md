@@ -20,7 +20,7 @@ cd stormify-examples/kotlin-rest
 
 ## Requirements
 
-- A system Gradle ≥ 8 (no wrapper is committed here).
+- A system Gradle 9 (no wrapper is committed here).
 - `libsqlite3` available at runtime — the native driver links against the system library.
 
 ## Run

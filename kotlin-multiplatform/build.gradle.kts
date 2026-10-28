@@ -25,6 +25,12 @@ kotlin {
     }
 
     jvmToolchain(8)
+    compilerOptions {
+        // The entities apply @DbField to constructor parameters; opt in to the future
+        // param+property target so the annotation applies to the property and stays
+        // warning-free (KT-73255).
+        freeCompilerArgs.add("-Xannotation-default-target=param-property")
+    }
 
     sourceSets {
         val jvmMain by getting {

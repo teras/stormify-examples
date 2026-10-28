@@ -34,13 +34,20 @@ Windows*) and place it next to the executable or on `PATH`.
 
 ## Build & Run
 
-Release build (optimized, stripped):
+On Windows, build and run in one step (debug):
+
+```bash
+gradle runDebugExecutableMingwX64
+```
+
+On a Linux host Gradle builds the `.exe` but skips running it. Link a release build
+(optimized, stripped), put `sqlite3.dll` next to it and run it under Wine. Run it from
+this folder: the demo creates its database under `build/`.
 
 ```bash
 gradle linkReleaseExecutableMingwX64
 cp /path/to/sqlite3.dll build/bin/mingwX64/releaseExecutable/
-cd build/bin/mingwX64/releaseExecutable
-wine stormify-kotlin-windows-demo.exe   # or run natively on Windows
+wine build/bin/mingwX64/releaseExecutable/stormify-kotlin-windows-demo.exe
 ```
 
 The `.exe` lives at `build/bin/mingwX64/releaseExecutable/stormify-kotlin-windows-demo.exe`.

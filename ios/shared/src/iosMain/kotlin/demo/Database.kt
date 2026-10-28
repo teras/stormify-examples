@@ -93,8 +93,8 @@ object Database {
                 user = alice
             }.create()
             Task().apply {
-                title = "Show off lazy refs"
-                description = "Tap a row \u2014 the user is loaded on demand."
+                title = "Show off references"
+                description = "Each row names its owner, read through task.user. Tap a row to toggle it done."
                 priority = Priority.MEDIUM
                 user = alice
             }.create()

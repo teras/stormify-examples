@@ -25,7 +25,6 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.assertNotNull
 
 /**
  * Service-level tests against a temp SQLite file — no HTTP layer, which keeps the suite simple
@@ -34,15 +33,9 @@ import kotlin.test.assertNotNull
  */
 class ServiceTest {
 
-    /**
-     * A conflict raised inside `async.transaction { }` reaches the caller wrapped in the
-     * transaction's `SQLException` (the same value the HTTP layer unwraps before answering
-     * 409). Outside a transaction it arrives directly. This accepts either shape.
-     */
+    /** A conflict reaches the caller as it is, also from inside `async.transaction { }`. */
     private inline fun assertConflict(block: () -> Unit) {
-        val error = assertFailsWith<Throwable> { block() }
-        val conflict = error as? ConflictException ?: error.cause as? ConflictException
-        assertNotNull(conflict, "expected a ConflictException, got: $error")
+        assertFailsWith<ConflictException> { block() }
     }
 
     @Test

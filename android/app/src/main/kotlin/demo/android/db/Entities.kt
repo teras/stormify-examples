@@ -15,10 +15,12 @@ import onl.ycode.stormify.*
  * - [Task] extends [AutoTable] so the `user` reference is lazy-loaded the
  *   first time it is accessed (Stormify handles the SELECT under the hood).
  *
- * Because Android cannot rely on full reflection, the `annproc` KSP processor
- * declared in `app/build.gradle.kts` walks these classes at compile time and
- * generates a `TableInfo` registration source. The registration runs the first
- * time we touch the database (see [Database]).
+ * The Stormify Gradle plugin applied in `app/build.gradle.kts` runs the
+ * `annproc` KSP processor, which walks these classes at compile time and
+ * generates the entity registrar `GeneratedEntities` (plus the type-safe
+ * `Tables` paths). [Database] passes `GeneratedEntities` to the `Stormify`
+ * constructor, so the metadata of these entities is registered at construction
+ * and no reflection is needed to map them.
  */
 
 enum class Priority(override val dbValue: Int) : DbValue {

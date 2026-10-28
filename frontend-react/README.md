@@ -23,7 +23,7 @@ gradle runDebugExecutableLinuxX64
 Then, in a separate terminal:
 
 ```bash
-cd frontend-react
+cd ../frontend-react
 npm install
 npm run dev
 ```

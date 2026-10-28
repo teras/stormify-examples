@@ -65,7 +65,7 @@ fun runDemo(stormify: Stormify) {
     // We must explicitly refresh it to get the remaining fields.
     println("\n=== Reference Loading ===")
     val userRef = foundTask!!.user           // auto-hydrated by Task (AutoTable)
-    println("Before refresh: $userRef")     // User(id=1, name=, email=)
+    println("Before refresh: $userRef")     // User(id=1, name=null, email=null)
     stormify.refresh(userRef!!)
     println("After refresh:  $userRef")     // User(id=1, name=Alice, email=alice@example.com)
 
@@ -99,6 +99,7 @@ fun runDemo(stormify: Stormify) {
             throw RuntimeException("Something went wrong!")
         }
     } catch (e: RuntimeException) {
+        // The exception of the block arrives here unchanged, after the rollback
         println("Transaction failed: ${e.message}")
     }
     val countAfter = findAll<Task>().size

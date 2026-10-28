@@ -26,7 +26,8 @@ internal class WarehouseService(private val async: SuspendStormify) {
     }
 
     suspend fun search(spec: PageSpec): PagedResponse<WarehouseResponse> = async.withConnection {
-        PagedQuerySupport.execute(query, spec, defaultSortAlias = "code") { it.toResponse() }
+        val page = query.execute(PagedQuerySupport.searchSpec(query, spec, defaultSortAlias = "code"))
+        PagedQuerySupport.buildResponse(page) { it.toResponse() }
     }
 
     suspend fun getById(id: Int): WarehouseResponse = async.withConnection { load(id).toResponse() }
@@ -81,7 +82,10 @@ internal class WarehouseService(private val async: SuspendStormify) {
             "country" to { it.country },
             "active" to { it.active }
         )
-        CsvSupport.stream(query, spec, columns, mapper = { it.toResponse() }, writeLine = writeLine)
+        writeLine(CsvSupport.header(columns))
+        // forEachStreaming walks the whole result set, so the pagination fields of the
+        // spec are ignored on this path: page 0 with a large page size.
+        query.forEachStreaming(spec.copy(page = 0, pageSize = 1000)) { writeLine(CsvSupport.row(columns, it.toResponse())) }
     }
 
     private fun load(id: Int): Warehouse =

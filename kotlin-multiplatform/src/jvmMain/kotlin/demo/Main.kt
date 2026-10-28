@@ -8,7 +8,12 @@ import java.io.File
 fun main() {
     File("build/demo.db").delete()
 
-    val ds = SQLiteDataSource().apply { url = "jdbc:sqlite:build/demo.db" }
+    // The schema below declares REFERENCES, but SQLite ignores foreign keys unless
+    // they are switched on per connection.
+    val ds = SQLiteDataSource().apply {
+        url = "jdbc:sqlite:build/demo.db"
+        setEnforceForeignKeys(true)
+    }
     val stormify = Stormify(ds, GeneratedEntities)
 
     runDemo(stormify)

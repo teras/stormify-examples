@@ -14,8 +14,11 @@ public class Main {
         new File("target/demo.db").delete();
 
         // Create a SQLite DataSource
+        // The schema below declares REFERENCES, but SQLite ignores foreign keys
+        // unless they are switched on per connection.
         SQLiteDataSource ds = new SQLiteDataSource();
         ds.setUrl("jdbc:sqlite:target/demo.db");
+        ds.setEnforceForeignKeys(true);
 
         // Initialize Stormify (Java-friendly wrapper) and set as default
         // so that AutoTable.hydrate() can find it for lazy-loading
@@ -117,6 +120,7 @@ public class Main {
                 throw new RuntimeException("Something went wrong!");
             });
         } catch (RuntimeException e) {
+            // The exception of the block arrives here unchanged, after the rollback
             System.out.println("Transaction failed: " + e.getMessage());
         }
         int countAfter = stormify.findAll(Task.class).size();

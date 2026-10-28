@@ -8,6 +8,8 @@ import com.example.kotlinrest.dto.transaction.SalesOrderRequest
 import com.example.kotlinrest.dto.transaction.toDetailsResponse
 import com.example.kotlinrest.dto.transaction.toListItemResponse
 import com.example.kotlinrest.entity.Customer
+import com.example.kotlinrest.entity.Product
+import com.example.kotlinrest.entity.Warehouse
 import com.example.kotlinrest.entity.SalesOrder
 import com.example.kotlinrest.entity.SalesOrderItem
 import com.example.kotlinrest.entity.SalesOrderStatus
@@ -45,10 +47,11 @@ internal class SalesOrderService(private val async: SuspendStormify) {
     }
 
     suspend fun search(spec: PageSpec): PagedResponse<SalesOrderListItemResponse> = async.withConnection {
-        PagedQuerySupport.executePage(query, spec, defaultSortAlias = "orderNumber") { orders ->
-            val totals = totalsByOrder(orders)
-            orders.map { it.toListItemResponse(totals[it.id] ?: 0L) }
-        }
+        val page = query.execute(PagedQuerySupport.searchSpec(query, spec, defaultSortAlias = "orderNumber"))
+        // The totals are not part of the query: fetch them for the whole page in one query
+        // rather than once per row.
+        val totals = totalsByOrder(page.rows)
+        PagedQuerySupport.buildResponse(page) { it.toListItemResponse(totals[it.id] ?: 0L) }
     }
 
     fun exportCsv(spec: PageSpec, writeLine: (String) -> Unit) {
@@ -62,14 +65,17 @@ internal class SalesOrderService(private val async: SuspendStormify) {
             "confirmedAt" to { it.confirmedAt },
             "totalAmount" to { centsToDecimal(it.totalAmount) },
         )
-        CsvSupport.streamChunked(
-            query, spec, columns,
-            mapper = { orders ->
-                val totals = totalsByOrder(orders)
-                orders.map { it.toListItemResponse(totals[it.id] ?: 0L) }
-            },
-            writeLine = writeLine,
-        )
+        // The totals are not part of the query, so rows are mapped a chunk at a time, with
+        // one totals query per chunk.
+        val chunks = CsvSupport.Chunks<SalesOrder, SalesOrderListItemResponse>(columns, writeLine) { orders ->
+            val totals = totalsByOrder(orders)
+            orders.map { it.toListItemResponse(totals[it.id] ?: 0L) }
+        }
+        writeLine(CsvSupport.header(columns))
+        // forEachStreaming walks the whole result set, so the pagination fields of the
+        // spec are ignored on this path: page 0 with a large page size.
+        query.forEachStreaming(spec.copy(page = 0, pageSize = 1000)) { chunks.add(it) }
+        chunks.flush()
     }
 
     suspend fun getById(id: Int): SalesOrderDetailsResponse = async.withConnection { load(id).toDetailsResponse() }
@@ -78,7 +84,8 @@ internal class SalesOrderService(private val async: SuspendStormify) {
         validateItems(request.items.size)
         val customer = findById<Customer>(request.customerId)
             ?: throw ReferenceNotFoundException("Customer", "customerId", request.customerId)
-        val warehouse = ServiceSupport.loadWarehouse(request.warehouseId)
+        val warehouse = findById<Warehouse>(request.warehouseId)
+            ?: throw ReferenceNotFoundException("Warehouse", "warehouseId", request.warehouseId)
         val order = SalesOrder().apply {
             orderNumber = DocumentNumberGenerator.nextSalesOrderNumber()
             this.customer = customer
@@ -93,7 +100,8 @@ internal class SalesOrderService(private val async: SuspendStormify) {
             ServiceSupport.validateNonNegative(input.unitPrice, "Sales order item unit price")
             SalesOrderItem().apply {
                 salesOrder = order
-                product = ServiceSupport.loadProduct(input.productId)
+                product = findById<Product>(input.productId)
+                    ?: throw ReferenceNotFoundException("Product", "productId", input.productId)
                 quantity = input.quantity
                 unitPrice = input.unitPrice
                 lineTotal = input.quantity * input.unitPrice
@@ -108,7 +116,8 @@ internal class SalesOrderService(private val async: SuspendStormify) {
         ServiceSupport.requireStatus(order.status, SalesOrderStatus.DRAFT, "sales orders", "updated")
         order.customer = findById<Customer>(request.customerId)
             ?: throw ReferenceNotFoundException("Customer", "customerId", request.customerId)
-        order.warehouse = ServiceSupport.loadWarehouse(request.warehouseId)
+        order.warehouse = findById<Warehouse>(request.warehouseId)
+            ?: throw ReferenceNotFoundException("Warehouse", "warehouseId", request.warehouseId)
         order.notes = request.notes.trim()
         order.update()
         order.details<SalesOrderItem>().forEach { it.delete() }
@@ -117,7 +126,8 @@ internal class SalesOrderService(private val async: SuspendStormify) {
             ServiceSupport.validateNonNegative(input.unitPrice, "Sales order item unit price")
             SalesOrderItem().apply {
                 salesOrder = order
-                product = ServiceSupport.loadProduct(input.productId)
+                product = findById<Product>(input.productId)
+                    ?: throw ReferenceNotFoundException("Product", "productId", input.productId)
                 quantity = input.quantity
                 unitPrice = input.unitPrice
                 lineTotal = input.quantity * input.unitPrice

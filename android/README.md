@@ -15,13 +15,18 @@ cd stormify-examples/android
 
 ## What it shows
 
-- Wiring `Stormify` to Android's `SQLiteDatabase` via the
-  `Stormify(SQLiteDatabase)` convenience constructor.
-- The KSP `annproc` processor generating `TableInfo` registration code at
-  compile time (mandatory on Android — full reflection isn't available).
+- Wiring `Stormify` to Android's `SQLiteDatabase` through KDBC's
+  `AndroidDataSource`: `Stormify(AndroidDataSource(db), GeneratedEntities)`.
+- The Stormify Gradle plugin running the KSP `annproc` processor at compile
+  time, which generates the entity metadata registrar `GeneratedEntities` and
+  the type-safe `Tables` paths. The registrar is registered when the `Stormify`
+  instance is constructed, so entities are mapped without reflection.
 - CRUD operations through the Stormify ORM API: `create`, `findAll`,
-  `update`, `delete`, plus a transaction with rollback on failure.
-- Lazy reference loading via `AutoTable` (a `Task` lazily resolves its `User`).
+  `findById`, `update`, `delete`. Tapping a row toggles the task's completion,
+  the bin icon deletes it, and the + button adds a new one. The first launch
+  seeds the database inside one `transaction { }`.
+- References via `AutoTable`: a `Task` resolves its `User`, which the ViewModel
+  refreshes before the list is shown, so each row names its owner.
 - Enum-as-int storage via `DbValue` so enum order changes don't corrupt data.
 
 ## Build & run

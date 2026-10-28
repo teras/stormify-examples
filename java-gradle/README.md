@@ -14,8 +14,8 @@ cd stormify-examples/java-gradle
 
 ## Highlights
 
-This is the [`java`](../java) example ported to Gradle, with one extra feature the
-Maven version can't offer: **type-safe generated paths** (`Tables.Task_.user.name`)
+This is the [`java-pom`](../java-pom) example ported to Gradle, with one extra feature the
+Maven version can't offer: **type-safe generated paths** (`Tables.Task_.user().name`)
 produced automatically by the Stormify Gradle plugin at compile time. Paths are
 refactor-safe — renaming or deleting a property stops the project from compiling.
 

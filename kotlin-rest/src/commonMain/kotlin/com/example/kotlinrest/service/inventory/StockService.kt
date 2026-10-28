@@ -48,7 +48,8 @@ internal class StockService(private val async: SuspendStormify) {
     }
 
     suspend fun search(spec: PageSpec): PagedResponse<StockListItemResponse> = async.withConnection {
-        PagedQuerySupport.execute(query, spec, defaultSortAlias = "warehouseName", mapper = StockItem::toListItemResponse)
+        val page = query.execute(PagedQuerySupport.searchSpec(query, spec, defaultSortAlias = "warehouseName"))
+        PagedQuerySupport.buildResponse(page) { it.toListItemResponse() }
     }
 
     fun exportCsv(spec: PageSpec, writeLine: (String) -> Unit) {
@@ -63,6 +64,9 @@ internal class StockService(private val async: SuspendStormify) {
             "reorderLevel" to { it.reorderLevel },
             "lastUpdatedAt" to { it.lastUpdatedAt },
         )
-        CsvSupport.stream(query, spec, columns, mapper = StockItem::toListItemResponse, writeLine = writeLine)
+        writeLine(CsvSupport.header(columns))
+        // forEachStreaming walks the whole result set, so the pagination fields of the
+        // spec are ignored on this path: page 0 with a large page size.
+        query.forEachStreaming(spec.copy(page = 0, pageSize = 1000)) { writeLine(CsvSupport.row(columns, it.toListItemResponse())) }
     }
 }

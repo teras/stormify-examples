@@ -2,7 +2,9 @@ package demo.android.db
 
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
+import onl.ycode.kdbc.AndroidDataSource
 import onl.ycode.stormify.*
+import onl.ycode.stormify.generated.GeneratedEntities
 
 /**
  * Single owner of the Stormify instance for the demo app.
@@ -40,10 +42,11 @@ object Database {
         // the FK from task.user_id → user.id is enforced.
         db.setForeignKeyConstraintsEnabled(true)
 
-        // Stormify(SQLiteDatabase) is the Android-specific convenience function
-        // declared in stormify-android. It wraps the SQLiteDatabase in an
-        // AndroidDataSource (KDBC) and returns a ready-to-use Stormify.
-        val stormify = Stormify(db).asDefault()
+        // AndroidDataSource (KDBC) wraps the SQLiteDatabase as a Stormify data
+        // source. GeneratedEntities is the entity registrar the Stormify Gradle
+        // plugin generates at compile time; passing it here registers the
+        // metadata of every entity at construction.
+        val stormify = Stormify(AndroidDataSource(db), GeneratedEntities).asDefault()
 
         bootstrapSchema(stormify)
         seedIfEmpty(stormify)
@@ -91,8 +94,8 @@ object Database {
                 user = alice
             }.create()
             Task().apply {
-                title = "Show off lazy refs"
-                description = "Tap a row — the user is loaded on demand."
+                title = "Show off references"
+                description = "Each row names its owner, read through task.user. Tap a row to toggle it done."
                 priority = Priority.MEDIUM
                 user = alice
             }.create()

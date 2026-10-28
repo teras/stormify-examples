@@ -6,6 +6,9 @@ target/
 *.hprof
 local.properties
 
+# Personal Xcode state (window layout, scheme order) of whoever opened the project.
+xcuserdata/
+
 # Runtime DB files. kotlin-rest creates and seeds its own on first run, so
 # nothing under data/ belongs in the repository.
 data/

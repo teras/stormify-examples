@@ -34,39 +34,13 @@ internal object PagedQuerySupport {
                 "Available: ${query.facets.joinToString { it.alias }}")
     }
 
-    fun <T : Any, R> execute(
-        query: PagedQuery<T>,
-        spec: PageSpec,
-        defaultSortAlias: String? = null,
-        mapper: (T) -> R,
-    ): PagedResponse<R> {
-        requireSortAlias(query, defaultSortAlias)
-        val page = query.execute(normalizedSpec(spec, defaultSortAlias))
-        return buildResponse(page, mapper)
-    }
-
     /**
-     * Same as [execute], but the whole page is handed to [mapper] at once.
-     *
-     * Some rows need something the query did not select — the order totals, say. Mapping
-     * row by row would fetch that per row; mapping the page lets the caller fetch it for
-     * all of them in one query.
+     * The spec a search runs with: validated, with [defaultSortAlias] applied when the client
+     * asked for no sort, after checking that the alias is a facet of [query].
      */
-    fun <T : Any, R> executePage(
-        query: PagedQuery<T>,
-        spec: PageSpec,
-        defaultSortAlias: String? = null,
-        mapper: (List<T>) -> List<R>,
-    ): PagedResponse<R> {
+    fun <T : Any> searchSpec(query: PagedQuery<T>, spec: PageSpec, defaultSortAlias: String? = null): PageSpec {
         requireSortAlias(query, defaultSortAlias)
-        val page = query.execute(normalizedSpec(spec, defaultSortAlias))
-        return PagedResponse(
-            items = mapper(page.rows),
-            page = page.page,
-            pageSize = page.pageSize,
-            totalItems = page.total,
-            totalPages = page.totalPages,
-        )
+        return normalizedSpec(spec, defaultSortAlias)
     }
 
     fun <T, R> buildResponse(page: Page<T>, mapper: (T) -> R): PagedResponse<R> =

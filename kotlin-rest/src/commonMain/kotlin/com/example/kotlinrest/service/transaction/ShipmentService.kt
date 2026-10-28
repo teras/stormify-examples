@@ -9,6 +9,7 @@ import com.example.kotlinrest.dto.transaction.UpdateShipmentRequest
 import com.example.kotlinrest.dto.transaction.toDetailsResponse
 import com.example.kotlinrest.dto.transaction.toListItemResponse
 import com.example.kotlinrest.entity.SalesOrder
+import com.example.kotlinrest.entity.Warehouse
 import com.example.kotlinrest.entity.SalesOrderItem
 import com.example.kotlinrest.entity.SalesOrderStatus
 import com.example.kotlinrest.entity.Shipment
@@ -44,7 +45,8 @@ internal class ShipmentService(private val async: SuspendStormify) {
     }
 
     suspend fun search(spec: PageSpec): PagedResponse<ShipmentListItemResponse> = async.withConnection {
-        PagedQuerySupport.execute(query, spec, defaultSortAlias = "shipmentNumber") { it.toListItemResponse() }
+        val page = query.execute(PagedQuerySupport.searchSpec(query, spec, defaultSortAlias = "shipmentNumber"))
+        PagedQuerySupport.buildResponse(page) { it.toListItemResponse() }
     }
 
     fun exportCsv(spec: PageSpec, writeLine: (String) -> Unit) {
@@ -58,7 +60,10 @@ internal class ShipmentService(private val async: SuspendStormify) {
             "status" to { it.status },
             "shippedAt" to { it.shippedAt },
         )
-        CsvSupport.stream(query, spec, columns, mapper = { it.toListItemResponse() }, writeLine = writeLine)
+        writeLine(CsvSupport.header(columns))
+        // forEachStreaming walks the whole result set, so the pagination fields of the
+        // spec are ignored on this path: page 0 with a large page size.
+        query.forEachStreaming(spec.copy(page = 0, pageSize = 1000)) { writeLine(CsvSupport.row(columns, it.toListItemResponse())) }
     }
 
     suspend fun getById(id: Int): ShipmentDetailsResponse = async.withConnection { load(id).toDetailsResponse() }
@@ -72,7 +77,8 @@ internal class ShipmentService(private val async: SuspendStormify) {
         // Stock is reserved by `confirm`, so there is nothing to ship before it runs.
         if (salesOrder.status != SalesOrderStatus.CONFIRMED)
             throw ConflictException("Only confirmed sales orders can be shipped")
-        val warehouse = ServiceSupport.loadWarehouse(request.warehouseId)
+        val warehouse = findById<Warehouse>(request.warehouseId)
+            ?: throw ReferenceNotFoundException("Warehouse", "warehouseId", request.warehouseId)
         // The reservation was made against the order's warehouse. Shipping from a
         // different one would deduct stock that was never promised here, and leave the
         // promised stock reserved forever.

@@ -8,8 +8,7 @@ import onl.ycode.stormify.Stormify
 import onl.ycode.stormify.generated.stormifyEntities
 
 fun openDatabase(settings: AppSettings): Stormify {
-    val parent = settings.dbPath.substringBeforeLast('/', "")
-    if (parent.isNotEmpty()) createDirectories(parent)
+    createParentDirectories(settings.dbPath)
     // initSql runs these on every fresh connection, in order. Foreign keys are off by
     // default in SQLite, and a busy timeout lets a write wait for a concurrent one instead
     // of failing outright.

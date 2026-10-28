@@ -26,7 +26,7 @@ The **KSP annotation processor** generates entity metadata at compile time, whic
 
 - **Shared code** — entities and business logic in `commonMain`
 - **Platform-specific DataSource** — only the entry point differs per platform
-- **KSP annotation processor** — generates `TableInfo` for both targets
+- **KSP annotation processor** — generates the entity metadata registrar `GeneratedEntities` and the type-safe `Tables` paths for every target
 - **AutoTable vs plain class** — `Task` auto-hydrates references, `User` requires explicit `refresh()`
 - **CRUD operations** — create, findById, findAll, update, delete
 - **Transaction DSL** with automatic rollback on exception
@@ -58,11 +58,15 @@ Or build + run in one step (debug): `gradle runDebugExecutableLinuxX64`.
 
 ## Windows native (release)
 
+On Windows, `gradle runDebugExecutableMingwX64` builds and runs in one step (debug).
+On a Linux host Gradle builds the `.exe` but skips running it: link it, put
+`sqlite3.dll` next to it and run it under Wine, from this folder (the demo creates its
+database under `build/`):
+
 ```bash
 gradle linkReleaseExecutableMingwX64
 cp /path/to/sqlite3.dll build/bin/mingwX64/releaseExecutable/
-cd build/bin/mingwX64/releaseExecutable
-wine stormify-kotlin-multiplatform-demo.exe   # or run natively on Windows
+wine build/bin/mingwX64/releaseExecutable/stormify-kotlin-multiplatform-demo.exe
 ```
 
 ## macOS native (release)
