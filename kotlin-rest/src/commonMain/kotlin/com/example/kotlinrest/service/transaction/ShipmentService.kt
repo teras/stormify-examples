@@ -24,12 +24,11 @@ import com.example.kotlinrest.service.support.CsvSupport
 import com.example.kotlinrest.support.DocumentNumberGenerator
 import onl.ycode.stormify.biglist.PageSpec
 import onl.ycode.stormify.biglist.Facet
-import onl.ycode.stormify.biglist.PagedQuery
 import onl.ycode.stormify.*
 import onl.ycode.stormify.coroutines.SuspendStormify
 
 internal class ShipmentService(private val async: SuspendStormify) {
-    private val query = PagedQuery<Shipment>().apply {
+    private val query = async.stormify.pagedQuery<Shipment>().apply {
         addFacet("search", "shipmentNumber", "salesOrder.orderNumber", "warehouse.name", "carrier", "trackingCode")
             .also { it.isSortable = false }
         addFacet("shipmentNumber", "shipmentNumber")
@@ -38,7 +37,7 @@ internal class ShipmentService(private val async: SuspendStormify) {
         addFacet("carrier", "carrier")
         addFacet("trackingCode", "trackingCode")
         // `enumAsString` stores the name, so the column is already the text to filter on.
-        addSqlFacet("status", "shipment.status", Facet.TEXT)
+        addSqlFacet("status", "shipment.status", Facet.Type.TEXT)
         addFacet("salesOrderId", "salesOrder.id")
         addFacet("warehouseId", "warehouse.id")
         addFacet("shippedAt", "shippedAt")

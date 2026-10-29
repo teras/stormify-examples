@@ -18,11 +18,10 @@ import com.example.kotlinrest.service.support.PagedQuerySupport
 import com.example.kotlinrest.support.centsToDecimal
 import onl.ycode.stormify.*
 import onl.ycode.stormify.biglist.PageSpec
-import onl.ycode.stormify.biglist.PagedQuery
 import onl.ycode.stormify.coroutines.SuspendStormify
 
 internal class ProductService(private val async: SuspendStormify) {
-    private val query = PagedQuery<Product>().apply {
+    private val query = async.stormify.pagedQuery<Product>().apply {
         addFacet("search", "sku", "name", "description").isSortable = false
         addFacet("sku", "sku")
         addFacet("unitPrice", "unitPrice")

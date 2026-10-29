@@ -8,11 +8,11 @@ import com.example.kotlinrest.service.support.PagedQuerySupport
 import com.example.kotlinrest.service.support.CsvSupport
 import onl.ycode.stormify.biglist.Facet
 import onl.ycode.stormify.biglist.PageSpec
-import onl.ycode.stormify.biglist.PagedQuery
+import onl.ycode.stormify.biglist.Converter
 import onl.ycode.stormify.coroutines.SuspendStormify
 
 internal class StockService(private val async: SuspendStormify) {
-    private val query = PagedQuery<StockItem>().apply {
+    private val query = async.stormify.pagedQuery<StockItem>().apply {
         val product = addTableRef("product")
         addFacet("search", "warehouse.name", "product.sku", "product.name").also { it.isSortable = false }
         addFacet("warehouseName", "warehouse.name")
@@ -27,15 +27,15 @@ internal class StockService(private val async: SuspendStormify) {
         addSqlFacet(
             "availableQuantity",
             "(stock_item.quantity_on_hand - stock_item.quantity_reserved)",
-            Facet.NUMERIC
+            Facet.Type.NUMERIC
         )
         addSqlFacet(
             "belowReorder",
             "CASE WHEN stock_item.quantity_on_hand <= ${product}.reorder_level THEN 1 ELSE 0 END",
-            Facet.NUMERIC
+            Facet.Type.NUMERIC
         ).also { facet ->
             facet.isSortable = false
-            facet.converter = { column, input, _, args ->
+            facet.converter = Converter { column, input, _, args ->
                 val expected = when (input.trim().lowercase()) {
                     "true", "1", "yes" -> 1
                     "false", "0", "no" -> 0

@@ -22,19 +22,18 @@ import com.example.kotlinrest.service.support.CsvSupport
 import com.example.kotlinrest.support.DocumentNumberGenerator
 import com.example.kotlinrest.support.centsToDecimal
 import onl.ycode.stormify.biglist.PageSpec
-import onl.ycode.stormify.biglist.PagedQuery
 import onl.ycode.stormify.biglist.Facet
 import onl.ycode.stormify.*
 import onl.ycode.stormify.coroutines.SuspendStormify
 
 internal class PurchaseOrderService(private val async: SuspendStormify) {
-    private val query = PagedQuery<PurchaseOrder>().apply {
+    private val query = async.stormify.pagedQuery<PurchaseOrder>().apply {
         addFacet("search", "orderNumber", "supplier.name", "warehouse.name").also { it.isSortable = false }
         addFacet("orderNumber", "orderNumber")
         addFacet("supplierName", "supplier.name")
         addFacet("warehouseName", "warehouse.name")
         // `enumAsString` stores the name, so the column is already the text to filter on.
-        addSqlFacet("status", "purchase_order.status", Facet.TEXT)
+        addSqlFacet("status", "purchase_order.status", Facet.Type.TEXT)
         addFacet("supplierId", "supplier.id")
         addFacet("warehouseId", "warehouse.id")
         addFacet("orderedAt", "orderedAt")
@@ -43,7 +42,7 @@ internal class PurchaseOrderService(private val async: SuspendStormify) {
         addSqlFacet(
             "totalAmount",
             "(SELECT COALESCE(SUM(line_total), 0) FROM purchase_order_item WHERE purchase_order_id = purchase_order.id)",
-            Facet.NUMERIC
+            Facet.Type.NUMERIC
         )
     }
 

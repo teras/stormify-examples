@@ -16,18 +16,17 @@ import com.example.kotlinrest.service.support.PagedQuerySupport
 import onl.ycode.stormify.*
 import onl.ycode.stormify.biglist.PageSpec
 import onl.ycode.stormify.biglist.Facet
-import onl.ycode.stormify.biglist.PagedQuery
 import onl.ycode.stormify.coroutines.SuspendStormify
 
 internal class CustomerService(private val async: SuspendStormify) {
-    private val query = PagedQuery<Customer>().apply {
+    private val query = async.stormify.pagedQuery<Customer>().apply {
         addFacet("search", "name", "email", "city", "country").isSortable = false
         addFacet("name", "name")
         addFacet("email", "email")
         addFacet("city", "city")
         addFacet("country", "country")
         // `enumAsString` stores the name, so the column is already the text to filter on.
-        addSqlFacet("customerType", "customer.customer_type", Facet.TEXT)
+        addSqlFacet("customerType", "customer.customer_type", Facet.Type.TEXT)
         addFacet("active", mapOf("true" to 1, "false" to 0), "active")
     }
 

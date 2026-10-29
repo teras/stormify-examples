@@ -14,11 +14,10 @@ import com.example.kotlinrest.service.support.CsvSupport
 import com.example.kotlinrest.service.support.PagedQuerySupport
 import onl.ycode.stormify.*
 import onl.ycode.stormify.biglist.PageSpec
-import onl.ycode.stormify.biglist.PagedQuery
 import onl.ycode.stormify.coroutines.SuspendStormify
 
 internal class SupplierService(private val async: SuspendStormify) {
-    private val query = PagedQuery<Supplier>().apply {
+    private val query = async.stormify.pagedQuery<Supplier>().apply {
         addFacet("search", "name", "contactName", "city", "country").isSortable = false
         addFacet("name", "name")
         addFacet("contactName", "contactName")

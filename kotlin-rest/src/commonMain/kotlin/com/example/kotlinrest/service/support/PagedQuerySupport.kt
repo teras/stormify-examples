@@ -5,7 +5,7 @@ import com.example.kotlinrest.exception.ValidationException
 import onl.ycode.stormify.biglist.Page
 import onl.ycode.stormify.biglist.PageSpec
 import onl.ycode.stormify.biglist.PagedQuery
-import onl.ycode.stormify.biglist.SortDir
+import onl.ycode.stormify.biglist.SortState
 
 internal object PagedQuerySupport {
     fun validate(spec: PageSpec) {
@@ -16,7 +16,7 @@ internal object PagedQuerySupport {
     fun normalizedSpec(spec: PageSpec, defaultSortAlias: String? = null): PageSpec {
         validate(spec)
         if (!spec.sorts.isEmpty() || defaultSortAlias == null) return spec
-        return spec.copy(sorts = mapOf(defaultSortAlias to SortDir.ASC))
+        return spec.copy(sorts = mapOf(defaultSortAlias to SortState.ASCENDING))
     }
 
     /**
